@@ -1,7 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import Navigation from "@/components/Navigation";
+import { User } from "@supabase/supabase-js";
 
 // Mock player data - will be replaced with Supabase data
 const mockPlayers = [
@@ -18,10 +23,92 @@ const mockPlayers = [
 const Fantasy = () => {
   const [selectedPlayers, setSelectedPlayers] = useState<typeof mockPlayers>([]);
   const [budget] = useState(12000);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
   const totalCost = selectedPlayers.reduce((sum, player) => sum + player.price, 0);
   const remainingBudget = budget - totalCost;
   const maxPlayers = 6;
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+        if (!session) {
+          navigate("/login");
+        } else {
+          loadTeam(session.user.id);
+        }
+        setLoading(false);
+      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (!session) {
+        navigate("/login");
+      } else {
+        loadTeam(session.user.id);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const loadTeam = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('fantasy_teams')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading team:', error);
+        return;
+      }
+
+      if (data && data.selected_players) {
+        setSelectedPlayers(data.selected_players as typeof mockPlayers);
+      }
+    } catch (error) {
+      console.error('Error loading team:', error);
+    }
+  };
+
+  const saveTeam = async () => {
+    if (!user) return;
+    
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('fantasy_teams')
+        .upsert({
+          user_id: user.id,
+          selected_players: selectedPlayers,
+          total_cost: totalCost,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Team gespeichert!",
+        description: "Dein Fantasy-Team wurde erfolgreich gespeichert.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Fehler beim Speichern",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const addPlayer = (player: typeof mockPlayers[0]) => {
     if (selectedPlayers.length >= maxPlayers) return;
@@ -39,8 +126,24 @@ const Fantasy = () => {
     player => !selectedPlayers.find(p => p.id === player.id)
   );
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background font-roboto">
+        <Navigation />
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Lade dein Team...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background p-4 font-roboto">
+    <div className="min-h-screen bg-background font-roboto">
+      <Navigation />
+      <div className="p-4">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
@@ -95,11 +198,13 @@ const Fantasy = () => {
                   ))
                 )}
                 
-                {selectedPlayers.length === maxPlayers && (
-                  <Button className="w-full bg-gradient-primary text-primary-foreground font-medium hover:shadow-glow transition-smooth">
-                    Save Team
-                  </Button>
-                )}
+                <Button 
+                  onClick={saveTeam}
+                  disabled={saving || selectedPlayers.length === 0}
+                  className="w-full bg-gradient-primary text-primary-foreground font-medium hover:shadow-glow transition-smooth"
+                >
+                  {saving ? "Speichere..." : "Team Speichern"}
+                </Button>
               </CardContent>
             </Card>
           </div>
@@ -164,6 +269,7 @@ const Fantasy = () => {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };
