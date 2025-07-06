@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
@@ -25,7 +27,9 @@ const Fantasy = () => {
   const [budget] = useState(12000);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [leagues, setLeagues] = useState<any[]>([]);
+  const [currentLeague, setCurrentLeague] = useState<string>('');
+  const [teamName, setTeamName] = useState<string>('My Team');
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -40,7 +44,7 @@ const Fantasy = () => {
         if (!session) {
           navigate("/login");
         } else {
-          loadTeam(session.user.id);
+          loadUserLeagues(session.user.id);
         }
         setLoading(false);
       }
@@ -51,7 +55,7 @@ const Fantasy = () => {
       if (!session) {
         navigate("/login");
       } else {
-        loadTeam(session.user.id);
+        loadUserLeagues(session.user.id);
       }
       setLoading(false);
     });
@@ -59,12 +63,46 @@ const Fantasy = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const loadTeam = async (userId: string) => {
+  const loadUserLeagues = async (userId: string) => {
+    try {
+      const { data: memberships, error } = await supabase
+        .from('league_memberships')
+        .select(`
+          league_id,
+          leagues (
+            id,
+            name,
+            is_global
+          )
+        `)
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Error loading leagues:', error);
+        return;
+      }
+
+      const userLeagues = memberships?.map(m => m.leagues).filter(Boolean) || [];
+      setLeagues(userLeagues);
+      
+      // Set global league as default
+      const globalLeague = userLeagues.find(league => league.is_global);
+      if (globalLeague) {
+        setCurrentLeague(globalLeague.id);
+        loadTeam(userId, globalLeague.id);
+      }
+    } catch (error) {
+      console.error('Error loading leagues:', error);
+    }
+  };
+
+  const loadTeam = async (userId: string, leagueId: string) => {
     try {
       const { data, error } = await supabase
         .from('fantasy_teams')
         .select('*')
         .eq('user_id', userId)
+        .eq('league_id', leagueId)
         .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
@@ -72,23 +110,29 @@ const Fantasy = () => {
         return;
       }
 
-      if (data && data.selected_players) {
+      if (data) {
         setSelectedPlayers(data.selected_players as typeof mockPlayers);
+        setTeamName(data.team_name || 'My Team');
+      } else {
+        setSelectedPlayers([]);
+        setTeamName('My Team');
       }
     } catch (error) {
       console.error('Error loading team:', error);
     }
   };
 
-  // Auto-save when selectedPlayers changes
+  // Auto-save when selectedPlayers, teamName, or currentLeague changes
   useEffect(() => {
-    if (user && selectedPlayers.length > 0 && !loading) {
+    if (user && currentLeague && !loading) {
       const saveTeamAuto = async () => {
         try {
           await supabase
             .from('fantasy_teams')
             .upsert({
               user_id: user.id,
+              league_id: currentLeague,
+              team_name: teamName,
               selected_players: selectedPlayers,
               total_cost: totalCost,
             });
@@ -99,7 +143,14 @@ const Fantasy = () => {
       
       saveTeamAuto();
     }
-  }, [selectedPlayers, user, totalCost, loading]);
+  }, [selectedPlayers, teamName, currentLeague, user, totalCost, loading]);
+
+  const handleLeagueChange = (leagueId: string) => {
+    setCurrentLeague(leagueId);
+    if (user) {
+      loadTeam(user.id, leagueId);
+    }
+  };
 
   // Calculate team rating based on total score
   const getTeamRating = () => {
@@ -116,36 +167,6 @@ const Fantasy = () => {
   };
 
   const teamRating = getTeamRating();
-
-  const saveTeam = async () => {
-    if (!user) return;
-    
-    setSaving(true);
-    try {
-      const { error } = await supabase
-        .from('fantasy_teams')
-        .upsert({
-          user_id: user.id,
-          selected_players: selectedPlayers,
-          total_cost: totalCost,
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Team gespeichert!",
-        description: "Dein Fantasy-Team wurde erfolgreich gespeichert.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Fehler beim Speichern",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const addPlayer = (player: typeof mockPlayers[0]) => {
     if (selectedPlayers.length >= maxPlayers) return;
@@ -191,6 +212,44 @@ const Fantasy = () => {
           </p>
         </div>
 
+        {/* League and Team Settings */}
+        <div className="mb-6 grid md:grid-cols-2 gap-4">
+          <Card className="bg-gradient-card border-border shadow-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg text-foreground">League Selection</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Select value={currentLeague} onValueChange={handleLeagueChange}>
+                <SelectTrigger className="bg-input border-border">
+                  <SelectValue placeholder="Select a league" />
+                </SelectTrigger>
+                <SelectContent>
+                  {leagues.map((league) => (
+                    <SelectItem key={league.id} value={league.id}>
+                      {league.name} {league.is_global && '(Global)'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-card border-border shadow-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg text-foreground">Team Name</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Input
+                value={teamName}
+                onChange={(e) => setTeamName(e.target.value)}
+                placeholder="Enter your team name"
+                className="bg-input border-border"
+                maxLength={50}
+              />
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Team Selection */}
           <div className="lg:col-span-1">
@@ -198,7 +257,7 @@ const Fantasy = () => {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between text-foreground">
                   <div className="flex items-center gap-2">
-                    Your Team
+                    {teamName}
                     <Badge className={`text-sm font-bold ${teamRating.color}`}>
                       {teamRating.grade}
                     </Badge>

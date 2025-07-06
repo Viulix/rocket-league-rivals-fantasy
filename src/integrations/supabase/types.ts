@@ -13,6 +13,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          league_id: string | null
           selected_players: Json
           team_name: string | null
           total_cost: number
@@ -22,6 +23,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          league_id?: string | null
           selected_players?: Json
           team_name?: string | null
           total_cost?: number
@@ -31,11 +33,82 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          league_id?: string | null
           selected_players?: Json
           team_name?: string | null
           total_cost?: number
           updated_at?: string
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fantasy_teams_league_id_fkey"
+            columns: ["league_id"]
+            isOneToOne: false
+            referencedRelation: "leagues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      league_memberships: {
+        Row: {
+          id: string
+          joined_at: string
+          league_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          league_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          league_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "league_memberships_league_id_fkey"
+            columns: ["league_id"]
+            isOneToOne: false
+            referencedRelation: "leagues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leagues: {
+        Row: {
+          created_at: string
+          creator_id: string | null
+          id: string
+          is_global: boolean | null
+          max_members: number | null
+          name: string
+          password: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id?: string | null
+          id?: string
+          is_global?: boolean | null
+          max_members?: number | null
+          name: string
+          password?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string | null
+          id?: string
+          is_global?: boolean | null
+          max_members?: number | null
+          name?: string
+          password?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
