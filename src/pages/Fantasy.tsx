@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
+import LeagueManagement from "@/components/LeagueManagement";
 import { User } from "@supabase/supabase-js";
 
 // Mock player data - will be replaced with Supabase data
@@ -135,6 +136,8 @@ const Fantasy = () => {
               team_name: teamName,
               selected_players: selectedPlayers,
               total_cost: totalCost,
+            }, {
+              onConflict: 'user_id,league_id'
             });
         } catch (error) {
           console.error('Auto-save error:', error);
@@ -213,41 +216,50 @@ const Fantasy = () => {
         </div>
 
         {/* League and Team Settings */}
-        <div className="mb-6 grid md:grid-cols-2 gap-4">
-          <Card className="bg-gradient-card border-border shadow-card">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg text-foreground">League Selection</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Select value={currentLeague} onValueChange={handleLeagueChange}>
-                <SelectTrigger className="bg-input border-border">
-                  <SelectValue placeholder="Select a league" />
-                </SelectTrigger>
-                <SelectContent>
-                  {leagues.map((league) => (
-                    <SelectItem key={league.id} value={league.id}>
-                      {league.name} {league.is_global && '(Global)'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
+        <div className="mb-6 space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <Card className="bg-gradient-card border-border shadow-card">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg text-foreground">League Selection</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Select value={currentLeague} onValueChange={handleLeagueChange}>
+                  <SelectTrigger className="bg-input border-border">
+                    <SelectValue placeholder="Select a league" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {leagues.map((league) => (
+                      <SelectItem key={league.id} value={league.id}>
+                        {league.name} {league.is_global && '(Global)'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-gradient-card border-border shadow-card">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg text-foreground">Team Name</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Input
-                value={teamName}
-                onChange={(e) => setTeamName(e.target.value)}
-                placeholder="Enter your team name"
-                className="bg-input border-border"
-                maxLength={50}
-              />
-            </CardContent>
-          </Card>
+            <Card className="bg-gradient-card border-border shadow-card">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg text-foreground">Team Name</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Input
+                  value={teamName}
+                  onChange={(e) => setTeamName(e.target.value)}
+                  placeholder="Enter your team name"
+                  className="bg-input border-border"
+                  maxLength={50}
+                />
+              </CardContent>
+            </Card>
+          </div>
+
+          <LeagueManagement 
+            user={user}
+            leagues={leagues}
+            currentLeague={currentLeague}
+            onLeaguesUpdate={() => user && loadUserLeagues(user.id)}
+          />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
