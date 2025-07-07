@@ -86,12 +86,10 @@ const Fantasy = () => {
       const userLeagues = memberships?.map(m => m.leagues).filter(Boolean) || [];
       setLeagues(userLeagues);
       
-      // Set global league as default
-      const globalLeague = userLeagues.find(league => league.is_global);
-      if (globalLeague) {
-        setCurrentLeague(globalLeague.id);
-        loadTeam(userId, globalLeague.id);
-      }
+      // Don't auto-select any league - user must choose explicitly
+      setCurrentLeague('');
+      setSelectedPlayers([]);
+      setTeamName('My Team');
     } catch (error) {
       console.error('Error loading leagues:', error);
     }
@@ -125,10 +123,10 @@ const Fantasy = () => {
 
   // Auto-save when selectedPlayers, teamName, or currentLeague changes
   useEffect(() => {
-    if (user && currentLeague && !loading) {
+    if (user && currentLeague && currentLeague !== '' && !loading) {
       const saveTeamAuto = async () => {
         try {
-          await supabase
+          const { error } = await supabase
             .from('fantasy_teams')
             .upsert({
               user_id: user.id,
@@ -139,19 +137,31 @@ const Fantasy = () => {
             }, {
               onConflict: 'user_id,league_id'
             });
+            
+          if (error) {
+            console.error('Auto-save error:', error);
+          }
         } catch (error) {
           console.error('Auto-save error:', error);
         }
       };
       
-      saveTeamAuto();
+      // Add a small delay to prevent too frequent saves
+      const timeoutId = setTimeout(saveTeamAuto, 500);
+      return () => clearTimeout(timeoutId);
     }
   }, [selectedPlayers, teamName, currentLeague, user, totalCost, loading]);
 
   const handleLeagueChange = (leagueId: string) => {
-    setCurrentLeague(leagueId);
-    if (user) {
-      loadTeam(user.id, leagueId);
+    if (leagueId !== currentLeague) {
+      setCurrentLeague(leagueId);
+      if (user && leagueId) {
+        loadTeam(user.id, leagueId);
+      } else {
+        // Clear team if no league selected
+        setSelectedPlayers([]);
+        setTeamName('My Team');
+      }
     }
   };
 
@@ -225,7 +235,7 @@ const Fantasy = () => {
               <CardContent>
                 <Select value={currentLeague} onValueChange={handleLeagueChange}>
                   <SelectTrigger className="bg-input border-border">
-                    <SelectValue placeholder="Select a league" />
+                    <SelectValue placeholder="Select a league to start building your team" />
                   </SelectTrigger>
                   <SelectContent>
                     {leagues.map((league) => (
@@ -249,6 +259,7 @@ const Fantasy = () => {
                   placeholder="Enter your team name"
                   className="bg-input border-border"
                   maxLength={50}
+                  disabled={!currentLeague}
                 />
               </CardContent>
             </Card>
@@ -285,7 +296,7 @@ const Fantasy = () => {
               <CardContent className="space-y-3">
                 {selectedPlayers.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">
-                    No players selected yet
+                    {!currentLeague ? 'Please select a league first' : 'No players selected yet'}
                   </p>
                 ) : (
                   selectedPlayers.map((player) => (
@@ -324,58 +335,64 @@ const Fantasy = () => {
               <CardHeader>
                 <CardTitle className="text-foreground">Available Players</CardTitle>
                 <CardDescription>
-                  Select players to add to your fantasy team
+                  {!currentLeague ? 'Select a league first to start building your team' : 'Select players to add to your fantasy team'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-2 gap-4">
-                  {availablePlayers.map((player) => {
-                    const canAfford = totalCost + player.price <= budget;
-                    const hasSpace = selectedPlayers.length < maxPlayers;
-                    const canAdd = canAfford && hasSpace;
+                {!currentLeague ? (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">Please select a league to view available players</p>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {availablePlayers.map((player) => {
+                      const canAfford = totalCost + player.price <= budget;
+                      const hasSpace = selectedPlayers.length < maxPlayers;
+                      const canAdd = canAfford && hasSpace;
 
-                    return (
-                       <div
-                         key={player.id}
-                         className={`p-4 rounded-lg border transition-smooth ${
-                           canAdd 
-                             ? 'border-border bg-card hover:border-primary/50' 
-                             : 'border-muted bg-muted/50 opacity-60'
-                         }`}
-                       >
-                         <div className="flex items-start justify-between mb-2">
-                           <div>
-                             <h3 className="font-bold text-foreground">{player.name}</h3>
-                             <p className="text-sm text-muted-foreground">
-                               {player.team} • {player.position}
-                             </p>
-                             <div className="text-xs text-muted-foreground mt-1">
-                               G: {player.goals} | A: {player.assists} | S: {player.saves} | GG: {player.goldenGoals}
+                      return (
+                         <div
+                           key={player.id}
+                           className={`p-4 rounded-lg border transition-smooth ${
+                             canAdd 
+                               ? 'border-border bg-card hover:border-primary/50' 
+                               : 'border-muted bg-muted/50 opacity-60'
+                           }`}
+                         >
+                           <div className="flex items-start justify-between mb-2">
+                             <div>
+                               <h3 className="font-bold text-foreground">{player.name}</h3>
+                               <p className="text-sm text-muted-foreground">
+                                 {player.team} • {player.position}
+                               </p>
+                               <div className="text-xs text-muted-foreground mt-1">
+                                 G: {player.goals} | A: {player.assists} | S: {player.saves} | GG: {player.goldenGoals}
+                               </div>
                              </div>
+                             <Badge variant="outline" className="text-xs">
+                               {player.score} pts
+                             </Badge>
                            </div>
-                           <Badge variant="outline" className="text-xs">
-                             {player.score} pts
-                           </Badge>
+                           
+                           <div className="flex items-center justify-between">
+                             <span className="font-bold text-primary text-lg">
+                               ${player.price.toLocaleString()}
+                             </span>
+                             <Button
+                               variant={canAdd ? "default" : "secondary"}
+                               size="sm"
+                               onClick={() => addPlayer(player)}
+                               disabled={!canAdd}
+                               className={canAdd ? "bg-gradient-primary text-primary-foreground hover:shadow-glow transition-smooth" : ""}
+                             >
+                               {!hasSpace ? "Team Full" : !canAfford ? "Too Expensive" : "Add"}
+                             </Button>
+                           </div>
                          </div>
-                         
-                         <div className="flex items-center justify-between">
-                           <span className="font-bold text-primary text-lg">
-                             ${player.price.toLocaleString()}
-                           </span>
-                           <Button
-                             variant={canAdd ? "default" : "secondary"}
-                             size="sm"
-                             onClick={() => addPlayer(player)}
-                             disabled={!canAdd}
-                             className={canAdd ? "bg-gradient-primary text-primary-foreground hover:shadow-glow transition-smooth" : ""}
-                           >
-                             {!hasSpace ? "Team Full" : !canAfford ? "Too Expensive" : "Add"}
-                           </Button>
-                         </div>
-                       </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
