@@ -40,7 +40,7 @@ const Navigation = () => {
             <Link to="/">
               <Button variant="ghost" size="sm" className="flex items-center gap-2">
                 <Home className="h-4 w-4" />
-                Startseite
+                Home
               </Button>
             </Link>
             
@@ -49,7 +49,13 @@ const Navigation = () => {
                 <Link to="/fantasy">
                   <Button variant="ghost" size="sm" className="flex items-center gap-2">
                     <UserIcon className="h-4 w-4" />
-                    Dashboard
+                    Fantasy
+                  </Button>
+                </Link>
+                <Link to="/leaderboard">
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                    <UserIcon className="h-4 w-4" />
+                    Global League
                   </Button>
                 </Link>
                 <Button 
@@ -59,13 +65,13 @@ const Navigation = () => {
                   className="flex items-center gap-2"
                 >
                   <LogOut className="h-4 w-4" />
-                  Abmelden
+                  Sign Out
                 </Button>
               </>
             ) : (
               <Link to="/login">
                 <Button variant="outline" size="sm">
-                  Anmelden
+                  Sign In
                 </Button>
               </Link>
             )}
