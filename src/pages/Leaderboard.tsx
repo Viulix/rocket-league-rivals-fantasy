@@ -77,22 +77,26 @@ const Leaderboard = () => {
         return;
       }
 
-      // Get all teams in global league with owner info
+      // Get all teams in global league
       const { data: teamsData, error: teamsError } = await supabase
         .from('fantasy_teams')
-        .select(`
-          team_name,
-          user_id,
-          selected_players,
-          total_cost,
-          profiles (
-            display_name
-          )
-        `)
+        .select('team_name, user_id, selected_players, total_cost')
         .eq('league_id', globalLeague.id);
 
       if (teamsError) {
         console.error('Error loading teams:', teamsError);
+        return;
+      }
+
+      // Get all profiles for the team owners
+      const userIds = teamsData?.map(team => team.user_id) || [];
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, display_name')
+        .in('user_id', userIds);
+
+      if (profilesError) {
+        console.error('Error loading profiles:', profilesError);
         return;
       }
 
@@ -113,6 +117,9 @@ const Leaderboard = () => {
             else if (avgScore >= 900) grade = 'C';
             else if (avgScore >= 800) grade = 'D';
 
+            // Find the owner's profile
+            const profile = profilesData?.find(p => p.user_id === team.user_id);
+
             return {
               team_name: team.team_name || 'Unnamed Team',
               user_id: team.user_id,
@@ -120,7 +127,7 @@ const Leaderboard = () => {
               total_cost: team.total_cost,
               total_points: totalPoints,
               grade,
-              owner_name: (team.profiles as any)?.display_name || 'Unknown Player'
+              owner_name: profile?.display_name || 'Unknown Player'
             };
           })
           .sort((a, b) => b.total_points - a.total_points);
