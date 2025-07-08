@@ -12,6 +12,9 @@ const Login = () => {
   const [confirmEmail, setConfirmEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [isDisplayNameAvailable, setIsDisplayNameAvailable] = useState<boolean | null>(null);
+  const [checkingDisplayName, setCheckingDisplayName] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -28,6 +31,37 @@ const Login = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Check display name availability with debouncing
+  useEffect(() => {
+    if (!displayName.trim() || isLogin) {
+      setIsDisplayNameAvailable(null);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setCheckingDisplayName(true);
+      try {
+        const { data, error } = await supabase.rpc('check_display_name_available', {
+          name: displayName.trim()
+        });
+        
+        if (error) {
+          console.error('Error checking display name:', error);
+          setIsDisplayNameAvailable(null);
+        } else {
+          setIsDisplayNameAvailable(data);
+        }
+      } catch (error) {
+        console.error('Error checking display name:', error);
+        setIsDisplayNameAvailable(null);
+      } finally {
+        setCheckingDisplayName(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [displayName, isLogin]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,12 +96,42 @@ const Login = () => {
           });
           return;
         }
+
+        if (!displayName.trim()) {
+          toast({
+            title: "Error",
+            description: "Display name is required",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (isDisplayNameAvailable === false) {
+          toast({
+            title: "Error",
+            description: "Display name is already taken",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (isDisplayNameAvailable === null) {
+          toast({
+            title: "Error",
+            description: "Please wait while we check display name availability",
+            variant: "destructive",
+          });
+          return;
+        }
         
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/fantasy`
+            emailRedirectTo: `${window.location.origin}/fantasy`,
+            data: {
+              display_name: displayName.trim()
+            }
           }
         });
         if (error) throw error;
@@ -129,38 +193,63 @@ const Login = () => {
                     required
                     className="bg-input border-border"
                   />
+                 </div>
+               )}
+               {!isLogin && (
+                 <div className="space-y-2">
+                   <Label htmlFor="displayName">Display Name</Label>
+                   <Input
+                     id="displayName"
+                     type="text"
+                     value={displayName}
+                     onChange={(e) => setDisplayName(e.target.value)}
+                     required
+                     className="bg-input border-border"
+                     placeholder="Choose a unique display name"
+                   />
+                   {displayName.trim() && (
+                     <div className="text-xs">
+                       {checkingDisplayName ? (
+                         <span className="text-muted-foreground">Checking availability...</span>
+                       ) : isDisplayNameAvailable === true ? (
+                         <span className="text-green-500">✓ Display name is available</span>
+                       ) : isDisplayNameAvailable === false ? (
+                         <span className="text-red-500">✗ Display name is already taken</span>
+                       ) : null}
+                     </div>
+                   )}
+                 </div>
+               )}
+               <div className="space-y-2">
+                 <Label htmlFor="password">Password</Label>
+                 <Input
+                   id="password"
+                   type="password"
+                   value={password}
+                   onChange={(e) => setPassword(e.target.value)}
+                   required
+                   className="bg-input border-border"
+                 />
+               </div>
+               {!isLogin && (
+                 <div className="space-y-2">
+                   <Label htmlFor="confirmPassword">Confirm Password</Label>
+                   <Input
+                     id="confirmPassword"
+                     type="password"
+                     value={confirmPassword}
+                     onChange={(e) => setConfirmPassword(e.target.value)}
+                     required
+                     className="bg-input border-border"
+                   />
                 </div>
               )}
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="bg-input border-border"
-                />
-              </div>
-              {!isLogin && (
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    className="bg-input border-border"
-                  />
-                </div>
-              )}
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-primary text-primary-foreground font-medium hover:shadow-glow transition-smooth"
-                disabled={loading}
-              >
-                {loading ? "Loading..." : (isLogin ? "Sign In" : "Create Account")}
+               <Button 
+                 type="submit" 
+                 className="w-full bg-gradient-primary text-primary-foreground font-medium hover:shadow-glow transition-smooth"
+                 disabled={loading || (!isLogin && (checkingDisplayName || isDisplayNameAvailable === false))}
+               >
+                 {loading ? "Loading..." : (isLogin ? "Sign In" : "Create Account")}
               </Button>
             </form>
             
