@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, ChevronDown } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 
 interface League {
@@ -27,6 +28,7 @@ interface LeagueManagementProps {
 const LeagueManagement = ({ user, leagues, currentLeague, onLeaguesUpdate }: LeagueManagementProps) => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isJoinOpen, setIsJoinOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [newLeagueName, setNewLeagueName] = useState("");
   const [newLeaguePassword, setNewLeaguePassword] = useState("");
   const [joinLeagueName, setJoinLeagueName] = useState("");
@@ -192,11 +194,20 @@ const LeagueManagement = ({ user, leagues, currentLeague, onLeaguesUpdate }: Lea
 
   return (
     <Card className="bg-gradient-card border-border shadow-card">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg text-foreground">League Management</CardTitle>
-        <CardDescription>Create or join custom leagues</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+      <Collapsible open={!isCollapsed} onOpenChange={(open) => setIsCollapsed(!open)}>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg text-foreground">League Management</CardTitle>
+                <CardDescription>Create or join custom leagues</CardDescription>
+              </div>
+              <ChevronDown className={`h-4 w-4 transition-transform ${isCollapsed ? '' : 'rotate-180'}`} />
+            </div>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="space-y-4">
         <div className="flex gap-2">
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
@@ -311,7 +322,9 @@ const LeagueManagement = ({ user, leagues, currentLeague, onLeaguesUpdate }: Lea
             </div>
           </div>
         )}
-      </CardContent>
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
     </Card>
   );
 };

@@ -66,7 +66,8 @@ const Fantasy = () => {
 
   const loadUserLeagues = async (userId: string) => {
     try {
-      const { data: memberships, error } = await supabase
+      // Get all leagues the user is a member of
+      const { data: memberships, error: membershipsError } = await supabase
         .from('league_memberships')
         .select(`
           league_id,
@@ -78,13 +79,28 @@ const Fantasy = () => {
         `)
         .eq('user_id', userId);
 
-      if (error) {
-        console.error('Error loading leagues:', error);
+      if (membershipsError) {
+        console.error('Error loading league memberships:', membershipsError);
         return;
       }
 
+      // Get the global league separately to ensure it's always available
+      const { data: globalLeague, error: globalError } = await supabase
+        .from('leagues')
+        .select('id, name, is_global')
+        .eq('is_global', true)
+        .single();
+
+      if (globalError) {
+        console.error('Error loading global league:', globalError);
+        return;
+      }
+
+      // Combine user leagues with global league
       const userLeagues = memberships?.map(m => m.leagues).filter(Boolean) || [];
-      setLeagues(userLeagues);
+      const allLeagues = [globalLeague, ...userLeagues.filter(league => !league.is_global)];
+      
+      setLeagues(allLeagues);
       
       // Don't auto-select any league - user must choose explicitly
       setCurrentLeague('');
