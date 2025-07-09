@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { User } from "@supabase/supabase-js";
@@ -29,10 +31,69 @@ interface LeaderboardTeam {
   owner_name: string;
 }
 
+interface TeamModalProps {
+  team: LeaderboardTeam | null;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const TeamModal = ({ team, isOpen, onClose }: TeamModalProps) => {
+  if (!team) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            {team.team_name}
+            <Badge variant="ghost" className={`font-bold ${getGradeColor(team.grade)}`}>
+              {team.grade}
+            </Badge>
+          </DialogTitle>
+          <DialogDescription>
+            Owner: {team.owner_name} • Total Points: {team.total_points.toLocaleString()} • Cost: ${team.total_cost.toLocaleString()}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 max-h-96 overflow-y-auto">
+          {team.selected_players.map((player, index) => {
+            const mockPlayer = mockPlayers.find(p => p.id === player.id);
+            if (!mockPlayer) return null;
+            
+            return (
+              <div key={player.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <div className="flex-1">
+                  <div className="font-medium text-foreground">{mockPlayer.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {mockPlayer.team} • {mockPlayer.position}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    G: {mockPlayer.goals} | A: {mockPlayer.assists} | S: {mockPlayer.saves} | GG: {mockPlayer.goldenGoals}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-primary">${mockPlayer.price.toLocaleString()}</div>
+                  <div className="text-xs text-muted-foreground">{mockPlayer.score} pts</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex justify-end pt-4">
+          <Button variant="outline" onClick={onClose}>
+            Close
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const Leaderboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [teams, setTeams] = useState<LeaderboardTeam[]>([]);
+  const [selectedTeam, setSelectedTeam] = useState<LeaderboardTeam | null>(null);
+  const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -139,15 +200,14 @@ const Leaderboard = () => {
     }
   };
 
-  const getGradeColor = (grade: string) => {
-    switch (grade) {
-      case 'S': return 'text-green-400';
-      case 'A': return 'text-blue-400';
-      case 'B': return 'text-yellow-400';
-      case 'C': return 'text-orange-400';
-      case 'D': return 'text-red-400';
-      default: return 'text-muted-foreground';
-    }
+  const openTeamModal = (team: LeaderboardTeam) => {
+    setSelectedTeam(team);
+    setIsTeamModalOpen(true);
+  };
+
+  const closeTeamModal = () => {
+    setSelectedTeam(null);
+    setIsTeamModalOpen(false);
   };
 
   if (loading) {
@@ -204,7 +264,11 @@ const Leaderboard = () => {
                   </TableHeader>
                   <TableBody>
                     {teams.map((team, index) => (
-                      <TableRow key={team.user_id}>
+                      <TableRow 
+                        key={team.user_id} 
+                        className="cursor-pointer hover:bg-muted/70 transition-all duration-200"
+                        onClick={() => openTeamModal(team)}
+                      >
                         <TableCell className="font-medium">{index + 1}</TableCell>
                         <TableCell className="font-medium text-foreground">
                           {team.team_name}
@@ -232,8 +296,25 @@ const Leaderboard = () => {
           </Card>
         </div>
       </div>
+      
+      <TeamModal 
+        team={selectedTeam} 
+        isOpen={isTeamModalOpen} 
+        onClose={closeTeamModal} 
+      />
     </div>
   );
+};
+
+const getGradeColor = (grade: string) => {
+  switch (grade) {
+    case 'S': return 'text-green-400';
+    case 'A': return 'text-blue-400';
+    case 'B': return 'text-yellow-400';
+    case 'C': return 'text-orange-400';
+    case 'D': return 'text-red-400';
+    default: return 'text-muted-foreground';
+  }
 };
 
 export default Leaderboard;

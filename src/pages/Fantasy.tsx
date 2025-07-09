@@ -188,11 +188,11 @@ const Fantasy = () => {
     const totalScore = selectedPlayers.reduce((sum, player) => sum + player.score, 0);
     const avgScore = totalScore / selectedPlayers.length;
     
-    if (avgScore >= 1200) return { grade: 'S', color: 'text-green-500' };
-    if (avgScore >= 1100) return { grade: 'A', color: 'text-blue-500' };
-    if (avgScore >= 1000) return { grade: 'B', color: 'text-yellow-500' };
-    if (avgScore >= 900) return { grade: 'C', color: 'text-orange-500' };
-    return { grade: 'D', color: 'text-red-500' };
+    if (avgScore >= 1200) return { grade: 'S', color: 'text-green-400' };
+    if (avgScore >= 1100) return { grade: 'A', color: 'text-blue-400' };
+    if (avgScore >= 1000) return { grade: 'B', color: 'text-yellow-400' };
+    if (avgScore >= 900) return { grade: 'C', color: 'text-orange-400' };
+    return { grade: 'D', color: 'text-red-400' };
   };
 
   const teamRating = getTeamRating();
@@ -232,7 +232,7 @@ const Fantasy = () => {
       <Navigation />
       <div className="p-4">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8 text-center">
+        <div className="mb-8 text-center animate-fade-in">
           <h1 className="text-4xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
             Fantasy Team Builder
           </h1>
@@ -244,7 +244,7 @@ const Fantasy = () => {
         {/* League and Team Settings */}
         <div className="mb-6 space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
-            <Card className="bg-gradient-card border-border shadow-card">
+            <Card className="bg-gradient-card border-border shadow-card animate-scale-in hover:shadow-glow transition-all duration-300">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg text-foreground">League Selection</CardTitle>
               </CardHeader>
@@ -264,7 +264,7 @@ const Fantasy = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-card border-border shadow-card">
+            <Card className="bg-gradient-card border-border shadow-card animate-scale-in hover:shadow-glow transition-all duration-300">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg text-foreground">Team Name</CardTitle>
               </CardHeader>
@@ -292,12 +292,12 @@ const Fantasy = () => {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Team Selection */}
           <div className="lg:col-span-1">
-            <Card className="bg-gradient-card border-border shadow-card sticky top-4">
+            <Card className="bg-gradient-card border-border shadow-card animate-scale-in hover:shadow-glow transition-all duration-300 sticky top-4">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between text-foreground">
                   <div className="flex items-center gap-2">
                     {teamName}
-                    <Badge className={`text-sm font-bold ${teamRating.color}`}>
+                    <Badge variant="ghost" className={`text-sm font-bold ${teamRating.color}`}>
                       {teamRating.grade}
                     </Badge>
                   </div>
@@ -316,7 +316,7 @@ const Fantasy = () => {
                   </p>
                 ) : (
                   selectedPlayers.map((player) => (
-                     <div key={player.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                     <div key={player.id} className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-all duration-200">
                        <div className="flex-1">
                          <div className="font-medium text-foreground">{player.name}</div>
                          <div className="text-xs text-muted-foreground">
@@ -347,7 +347,7 @@ const Fantasy = () => {
 
           {/* Player Pool */}
           <div className="lg:col-span-2">
-            <Card className="bg-gradient-card border-border shadow-card">
+            <Card className="bg-gradient-card border-border shadow-card animate-scale-in hover:shadow-glow transition-all duration-300">
               <CardHeader>
                 <CardTitle className="text-foreground">Available Players</CardTitle>
                 <CardDescription>
@@ -369,9 +369,9 @@ const Fantasy = () => {
                       return (
                          <div
                            key={player.id}
-                           className={`p-4 rounded-lg border transition-smooth ${
+                           className={`p-4 rounded-lg border transition-all duration-300 ${
                              canAdd 
-                               ? 'border-border bg-card hover:border-primary/50' 
+                               ? 'border-border bg-card hover:border-primary/50 hover:shadow-md hover:-translate-y-1' 
                                : 'border-muted bg-muted/50 opacity-60'
                            }`}
                          >
@@ -394,13 +394,13 @@ const Fantasy = () => {
                              <span className="font-bold text-primary text-lg">
                                ${player.price.toLocaleString()}
                              </span>
-                             <Button
-                               variant={canAdd ? "default" : "secondary"}
-                               size="sm"
-                               onClick={() => addPlayer(player)}
-                               disabled={!canAdd}
-                               className={canAdd ? "bg-gradient-primary text-primary-foreground hover:shadow-glow transition-smooth" : ""}
-                             >
+                              <Button
+                                variant={canAdd ? "default" : "secondary"}
+                                size="sm"
+                                onClick={() => addPlayer(player)}
+                                disabled={!canAdd}
+                                className={canAdd ? "bg-gradient-primary text-primary-foreground hover:shadow-glow hover:scale-105 transition-all duration-200" : ""}
+                              >
                                {!hasSpace ? "Team Full" : !canAfford ? "Too Expensive" : "Add"}
                              </Button>
                            </div>

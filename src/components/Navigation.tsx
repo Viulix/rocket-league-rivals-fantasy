@@ -178,7 +178,7 @@ const Navigation = () => {
           
           <div className="flex items-center space-x-4">
             <Link to="/">
-              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:scale-105 transition-all duration-200">
                 <Home className="h-4 w-4" />
                 Home
               </Button>
@@ -187,24 +187,24 @@ const Navigation = () => {
             {user ? (
               <>
                 <Link to="/fantasy">
-                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:scale-105 transition-all duration-200">
                     <UserIcon className="h-4 w-4" />
                     Fantasy
                   </Button>
                 </Link>
                 <Link to="/leaderboard">
-                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:scale-105 transition-all duration-200">
                     <UserIcon className="h-4 w-4" />
                      Global League
                    </Button>
                  </Link>
                  <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-                   <DialogTrigger asChild>
-                     <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                       <Settings className="h-4 w-4" />
-                       Profile
-                     </Button>
-                   </DialogTrigger>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:scale-105 transition-all duration-200">
+                        <Settings className="h-4 w-4" />
+                        Profile
+                      </Button>
+                    </DialogTrigger>
                    <DialogContent className="sm:max-w-md">
                      <DialogHeader>
                        <DialogTitle>Profile Settings</DialogTitle>
@@ -285,19 +285,19 @@ const Navigation = () => {
                      </div>
                    </DialogContent>
                  </Dialog>
-                 <Button
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleSignOut}
-                  className="flex items-center gap-2"
-                >
+                  <Button
+                   variant="outline" 
+                   size="sm" 
+                   onClick={handleSignOut}
+                   className="flex items-center gap-2 hover:scale-105 transition-all duration-200"
+                 >
                   <LogOut className="h-4 w-4" />
                   Sign Out
                 </Button>
               </>
             ) : (
               <Link to="/login">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="hover:scale-105 transition-all duration-200">
                   Sign In
                 </Button>
               </Link>
