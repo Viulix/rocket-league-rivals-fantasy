@@ -141,11 +141,11 @@ const Leaderboard = () => {
 
   const getGradeColor = (grade: string) => {
     switch (grade) {
-      case 'S': return 'text-green-500';
-      case 'A': return 'text-blue-500';
-      case 'B': return 'text-yellow-500';
-      case 'C': return 'text-orange-500';
-      case 'D': return 'text-red-500';
+      case 'S': return 'text-green-400';
+      case 'A': return 'text-blue-400';
+      case 'B': return 'text-yellow-400';
+      case 'C': return 'text-orange-400';
+      case 'D': return 'text-red-400';
       default: return 'text-muted-foreground';
     }
   };
@@ -169,7 +169,7 @@ const Leaderboard = () => {
       <Navigation />
       <div className="p-4">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-8 text-center">
+          <div className="mb-8 text-center animate-fade-in">
             <h1 className="text-4xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
               Global League Leaderboard
             </h1>
@@ -178,7 +178,7 @@ const Leaderboard = () => {
             </p>
           </div>
 
-          <Card className="bg-gradient-card border-border shadow-card">
+          <Card className="bg-gradient-card border-border shadow-card animate-scale-in hover:shadow-glow transition-all duration-300">
             <CardHeader>
               <CardTitle className="text-foreground">Top Fantasy Teams</CardTitle>
               <CardDescription>
@@ -216,7 +216,7 @@ const Leaderboard = () => {
                           {team.total_points.toLocaleString()}
                         </TableCell>
                         <TableCell className="text-center">
-                          <Badge className={`font-bold ${getGradeColor(team.grade)}`}>
+                          <Badge variant="ghost" className={`font-bold ${getGradeColor(team.grade)}`}>
                             {team.grade}
                           </Badge>
                         </TableCell>
