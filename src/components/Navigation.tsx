@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/providers/ThemeProvider";
 import { User } from "@supabase/supabase-js";
-import { Home, User as UserIcon, LogOut, Settings } from "lucide-react";
+import { Home, User as UserIcon, LogOut, Settings, Sun, Moon } from "lucide-react";
 
 const Navigation = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -20,6 +21,7 @@ const Navigation = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -192,12 +194,23 @@ const Navigation = () => {
                     Fantasy
                   </Button>
                 </Link>
-                <Link to="/leaderboard">
-                  <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:scale-105 transition-all duration-200">
-                    <UserIcon className="h-4 w-4" />
-                     Global League
+                 <Link to="/leaderboard">
+                   <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:scale-105 transition-all duration-200">
+                     <UserIcon className="h-4 w-4" />
+                      Global League
                    </Button>
                  </Link>
+                 
+                 <Button
+                   variant="ghost"
+                   size="sm"
+                   onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                   className="flex items-center gap-2 hover:scale-105 transition-all duration-200"
+                 >
+                   {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                   {theme === "dark" ? "Light" : "Dark"}
+                 </Button>
+                 
                  <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
                     <DialogTrigger asChild>
                       <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:scale-105 transition-all duration-200">

@@ -196,22 +196,22 @@ const LeagueManagement = ({ user, leagues, currentLeague, onLeaguesUpdate }: Lea
     <Card className="bg-gradient-card border-border shadow-card">
       <Collapsible open={!isCollapsed} onOpenChange={(open) => setIsCollapsed(!open)}>
         <CollapsibleTrigger asChild>
-          <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors">
+          <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 hover:scale-[1.01] transition-smooth">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-lg text-foreground">League Management</CardTitle>
                 <CardDescription>Create or join custom leagues</CardDescription>
               </div>
-              <ChevronDown className={`h-4 w-4 transition-transform ${isCollapsed ? '' : 'rotate-180'}`} />
+              <ChevronDown className={`h-4 w-4 transition-smooth ${isCollapsed ? '' : 'rotate-180'}`} />
             </div>
           </CardHeader>
         </CollapsibleTrigger>
-        <CollapsibleContent>
+        <CollapsibleContent className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
           <CardContent className="space-y-4">
         <div className="flex gap-2">
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button variant="outline" className="flex items-center gap-2 hover:scale-105 transition-smooth">
                 <Plus className="h-4 w-4" />
                 Create League
               </Button>
@@ -246,10 +246,10 @@ const LeagueManagement = ({ user, leagues, currentLeague, onLeaguesUpdate }: Lea
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={createLeague} disabled={loading || !newLeagueName.trim()}>
+                  <Button onClick={createLeague} disabled={loading || !newLeagueName.trim()} className="hover:scale-105 transition-smooth">
                     Create
                   </Button>
-                  <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
+                  <Button variant="outline" onClick={() => setIsCreateOpen(false)} className="hover:scale-105 transition-smooth">
                     Cancel
                   </Button>
                 </div>
@@ -259,7 +259,7 @@ const LeagueManagement = ({ user, leagues, currentLeague, onLeaguesUpdate }: Lea
 
           <Dialog open={isJoinOpen} onOpenChange={setIsJoinOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">Join League</Button>
+              <Button variant="outline" className="hover:scale-105 transition-smooth">Join League</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -289,10 +289,10 @@ const LeagueManagement = ({ user, leagues, currentLeague, onLeaguesUpdate }: Lea
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={joinLeague} disabled={loading || !joinLeagueName.trim()}>
+                  <Button onClick={joinLeague} disabled={loading || !joinLeagueName.trim()} className="hover:scale-105 transition-smooth">
                     Join
                   </Button>
-                  <Button variant="outline" onClick={() => setIsJoinOpen(false)}>
+                  <Button variant="outline" onClick={() => setIsJoinOpen(false)} className="hover:scale-105 transition-smooth">
                     Cancel
                   </Button>
                 </div>
@@ -306,14 +306,14 @@ const LeagueManagement = ({ user, leagues, currentLeague, onLeaguesUpdate }: Lea
             <h4 className="text-sm font-medium text-foreground mb-2">Your Leagues</h4>
             <div className="space-y-2">
               {userCreatedLeagues.map((league) => (
-                <div key={league.id} className="flex items-center justify-between p-2 bg-muted rounded">
+                <div key={league.id} className="flex items-center justify-between p-2 bg-muted rounded hover:bg-muted/80 transition-smooth">
                   <span className="text-sm">{league.name}</span>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => deleteLeague(league.id)}
                     disabled={loading || league.id === currentLeague}
-                    className="h-6 w-6 p-0"
+                    className="h-6 w-6 p-0 hover:scale-110 hover:bg-destructive/20 hover:text-destructive transition-smooth"
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
