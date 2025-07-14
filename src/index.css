@@ -8,43 +8,43 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Rocket League Dark Theme - Based on #191919 */
-    --background: 0 0% 10%; /* #191919 */
-    --foreground: 0 0% 95%;
+    /* Dark Theme - Elegant beige/dark tones */
+    --background: 25 10% 8%; /* Deep warm dark */
+    --foreground: 25 5% 95%;
 
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 95%;
+    --card: 25 8% 12%; /* Warm dark card */
+    --card-foreground: 25 5% 95%;
 
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 25 8% 12%;
+    --popover-foreground: 25 5% 95%;
 
-    --primary: 214 100% 60%; /* Bright blue accent */
-    --primary-foreground: 0 0% 10%;
+    --primary: 25 15% 85%; /* Warm beige accent */
+    --primary-foreground: 25 10% 8%;
 
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 90%;
+    --secondary: 25 8% 18%; /* Darker warm tone */
+    --secondary-foreground: 25 5% 90%;
 
-    --muted: 0 0% 17%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 25 6% 20%; /* Muted warm dark */
+    --muted-foreground: 25 5% 65%;
 
-    --accent: 214 100% 60%; /* Same as primary for consistency */
-    --accent-foreground: 0 0% 10%;
+    --accent: 25 12% 75%; /* Lighter beige accent */
+    --accent-foreground: 25 10% 8%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 95%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 17%;
-    --ring: 214 100% 60%;
+    --border: 25 8% 25%; /* Warm border */
+    --input: 25 6% 20%;
+    --ring: 25 15% 85%;
 
     --radius: 0.75rem;
 
-    /* Rocket League brand gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(214 100% 60%), hsl(194 100% 55%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 12%), hsl(0 0% 15%));
+    /* Warm elegant gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(25 15% 85%), hsl(25 12% 75%));
+    --gradient-card: linear-gradient(145deg, hsl(25 8% 12%), hsl(25 8% 16%));
     
-    /* Shadows with blue glow */
-    --shadow-glow: 0 0 30px hsla(214, 100%, 60%, 0.3);
+    /* Warm shadows */
+    --shadow-glow: 0 0 30px hsla(25, 15%, 85%, 0.15);
     --shadow-card: 0 4px 20px hsla(0, 0%, 0%, 0.5);
 
     /* Animations */
@@ -54,41 +54,41 @@ All colors MUST be HSL.
   }
 
   .light {
-    /* Rocket League Light Theme - Modern & Clean */
-    --background: 0 0% 98%; /* Clean white background */
-    --foreground: 0 0% 5%;
+    /* Light Theme - Clean beige/white tones */
+    --background: 25 20% 98%; /* Warm white background */
+    --foreground: 25 10% 5%;
 
-    --card: 0 0% 100%; /* Pure white cards */
-    --card-foreground: 0 0% 5%;
+    --card: 25 30% 100%; /* Pure warm white cards */
+    --card-foreground: 25 10% 5%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 5%;
+    --popover: 25 30% 100%;
+    --popover-foreground: 25 10% 5%;
 
-    --primary: 214 100% 50%; /* Slightly darker blue for better contrast */
-    --primary-foreground: 0 0% 100%;
+    --primary: 25 25% 25%; /* Dark warm accent */
+    --primary-foreground: 25 20% 98%;
 
-    --secondary: 0 0% 95%; /* Light gray */
-    --secondary-foreground: 0 0% 15%;
+    --secondary: 25 15% 95%; /* Light warm tone */
+    --secondary-foreground: 25 10% 15%;
 
-    --muted: 0 0% 93%; /* Subtle gray */
-    --muted-foreground: 0 0% 45%;
+    --muted: 25 12% 93%; /* Subtle warm gray */
+    --muted-foreground: 25 8% 45%;
 
-    --accent: 214 100% 50%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 25 20% 30%; /* Darker warm accent */
+    --accent-foreground: 25 20% 98%;
 
     --destructive: 0 84% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 88%; /* Light border */
-    --input: 0 0% 95%;
-    --ring: 214 100% 50%;
+    --border: 25 15% 88%; /* Light warm border */
+    --input: 25 12% 95%;
+    --ring: 25 25% 25%;
 
     /* Light theme gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(214 100% 50%), hsl(194 100% 45%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(0 0% 98%));
+    --gradient-primary: linear-gradient(135deg, hsl(25 25% 25%), hsl(25 20% 30%));
+    --gradient-card: linear-gradient(145deg, hsl(25 30% 100%), hsl(25 15% 98%));
     
     /* Light theme shadows */
-    --shadow-glow: 0 0 20px hsla(214, 100%, 50%, 0.15);
+    --shadow-glow: 0 0 20px hsla(25, 25%, 25%, 0.1);
     --shadow-card: 0 2px 15px hsla(0, 0%, 0%, 0.08);
   }
 }

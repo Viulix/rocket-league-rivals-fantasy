@@ -193,21 +193,35 @@ const LeagueManagement = ({ user, leagues, currentLeague, onLeaguesUpdate }: Lea
   };
 
   return (
-    <Card className="bg-gradient-card border-border shadow-card">
+    <Card className="bg-gradient-card border-border shadow-card overflow-hidden">
       <Collapsible open={!isCollapsed} onOpenChange={(open) => setIsCollapsed(!open)}>
         <CollapsibleTrigger asChild>
-          <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 hover:scale-[1.01] transition-smooth">
+          <CardHeader className={`pb-3 cursor-pointer transition-smooth group ${
+            !isCollapsed 
+              ? 'bg-muted/30 border-b border-border' 
+              : 'hover:bg-muted/20 hover:shadow-lg'
+          }`}>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-lg text-foreground">League Management</CardTitle>
+                <CardTitle className="text-lg text-foreground group-hover:text-primary transition-smooth">
+                  League Management
+                </CardTitle>
                 <CardDescription>Create or join custom leagues</CardDescription>
               </div>
-              <ChevronDown className={`h-4 w-4 transition-smooth ${isCollapsed ? '' : 'rotate-180'}`} />
+              <div className={`transition-smooth ${
+                !isCollapsed 
+                  ? 'bg-primary/10 rounded-full p-1' 
+                  : 'group-hover:bg-muted/20 rounded-full p-1'
+              }`}>
+                <ChevronDown className={`h-4 w-4 transition-smooth ${
+                  isCollapsed ? 'group-hover:scale-110' : 'rotate-180 text-primary'
+                }`} />
+              </div>
             </div>
           </CardHeader>
         </CollapsibleTrigger>
-        <CollapsibleContent className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-          <CardContent className="space-y-4">
+        <CollapsibleContent className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden">
+          <CardContent className="space-y-4 pt-4 bg-gradient-to-b from-card to-muted/10">
         <div className="flex gap-2">
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
