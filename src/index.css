@@ -8,44 +8,44 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Dark Theme - Elegant beige/dark tones */
-    --background: 25 10% 8%; /* Deep warm dark */
-    --foreground: 25 5% 95%;
+    /* Dark Theme - Elegant dark blue/black tones */
+    --background: 220 15% 6%; /* Deep dark blue */
+    --foreground: 0 0% 98%;
 
-    --card: 25 8% 12%; /* Warm dark card */
-    --card-foreground: 25 5% 95%;
+    --card: 220 12% 9%; /* Dark blue card */
+    --card-foreground: 0 0% 98%;
 
-    --popover: 25 8% 12%;
-    --popover-foreground: 25 5% 95%;
+    --popover: 220 12% 9%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 25 15% 85%; /* Warm beige accent */
-    --primary-foreground: 25 10% 8%;
+    --primary: 0 0% 90%; /* Light gray accent */
+    --primary-foreground: 220 15% 6%;
 
-    --secondary: 25 8% 18%; /* Darker warm tone */
-    --secondary-foreground: 25 5% 90%;
+    --secondary: 220 10% 15%; /* Darker blue tone */
+    --secondary-foreground: 0 0% 92%;
 
-    --muted: 25 6% 20%; /* Muted warm dark */
-    --muted-foreground: 25 5% 65%;
+    --muted: 220 8% 18%; /* Muted dark blue */
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 25 12% 75%; /* Lighter beige accent */
-    --accent-foreground: 25 10% 8%;
+    --accent: 0 0% 80%; /* Light gray accent */
+    --accent-foreground: 220 15% 6%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 95%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 25 8% 25%; /* Warm border */
-    --input: 25 6% 20%;
-    --ring: 25 15% 85%;
+    --border: 220 8% 22%; /* Dark blue border */
+    --input: 220 8% 16%;
+    --ring: 0 0% 90%;
 
     --radius: 0.75rem;
 
-    /* Warm elegant gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(25 15% 85%), hsl(25 12% 75%));
-    --gradient-card: linear-gradient(145deg, hsl(25 8% 12%), hsl(25 8% 16%));
+    /* Dark elegant gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(0 0% 90%), hsl(0 0% 80%));
+    --gradient-card: linear-gradient(145deg, hsl(220 12% 9%), hsl(220 10% 12%));
     
-    /* Warm shadows */
-    --shadow-glow: 0 0 30px hsla(25, 15%, 85%, 0.15);
-    --shadow-card: 0 4px 20px hsla(0, 0%, 0%, 0.5);
+    /* Dark shadows */
+    --shadow-glow: 0 0 30px hsla(0, 0%, 90%, 0.15);
+    --shadow-card: 0 4px 20px hsla(0, 0%, 0%, 0.6);
 
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -54,41 +54,41 @@ All colors MUST be HSL.
   }
 
   .light {
-    /* Light Theme - Clean beige/white tones */
-    --background: 25 20% 98%; /* Warm white background */
-    --foreground: 25 10% 5%;
+    /* Light Theme - Clean gray/white tones */
+    --background: 0 0% 98%; /* Pure white background */
+    --foreground: 0 0% 5%;
 
-    --card: 25 30% 100%; /* Pure warm white cards */
-    --card-foreground: 25 10% 5%;
+    --card: 0 0% 100%; /* Pure white cards */
+    --card-foreground: 0 0% 5%;
 
-    --popover: 25 30% 100%;
-    --popover-foreground: 25 10% 5%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 5%;
 
-    --primary: 25 25% 25%; /* Dark warm accent */
-    --primary-foreground: 25 20% 98%;
+    --primary: 0 0% 10%; /* Dark gray accent */
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 25 15% 95%; /* Light warm tone */
-    --secondary-foreground: 25 10% 15%;
+    --secondary: 0 0% 95%; /* Light gray tone */
+    --secondary-foreground: 0 0% 15%;
 
-    --muted: 25 12% 93%; /* Subtle warm gray */
-    --muted-foreground: 25 8% 45%;
+    --muted: 0 0% 93%; /* Subtle gray */
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 25 20% 30%; /* Darker warm accent */
-    --accent-foreground: 25 20% 98%;
+    --accent: 0 0% 20%; /* Darker gray accent */
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 84% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 25 15% 88%; /* Light warm border */
-    --input: 25 12% 95%;
-    --ring: 25 25% 25%;
+    --border: 0 0% 88%; /* Light gray border */
+    --input: 0 0% 95%;
+    --ring: 0 0% 10%;
 
     /* Light theme gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(25 25% 25%), hsl(25 20% 30%));
-    --gradient-card: linear-gradient(145deg, hsl(25 30% 100%), hsl(25 15% 98%));
+    --gradient-primary: linear-gradient(135deg, hsl(0 0% 10%), hsl(0 0% 20%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(0 0% 98%));
     
     /* Light theme shadows */
-    --shadow-glow: 0 0 20px hsla(25, 25%, 25%, 0.1);
+    --shadow-glow: 0 0 20px hsla(0, 0%, 10%, 0.1);
     --shadow-card: 0 2px 15px hsla(0, 0%, 0%, 0.08);
   }
 }
