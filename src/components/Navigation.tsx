@@ -310,7 +310,7 @@ const Navigation = () => {
               </>
             ) : (
               <Link to="/login">
-                <Button variant="outline" size="sm" className="hover:scale-105 transition-all duration-200">
+                <Button variant="outline" size="sm" className="hover:scale-105 transition-all duration-150">
                   Sign In
                 </Button>
               </Link>
