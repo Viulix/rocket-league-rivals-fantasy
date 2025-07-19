@@ -51,6 +51,8 @@ All colors MUST be HSL.
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-fast: all 0.15s ease-out;
     --bounce-subtle: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    --font-family: 'Lexend Deca', Arial, sans-serif;
   }
 
   .light {
@@ -90,6 +92,8 @@ All colors MUST be HSL.
     /* Light theme shadows */
     --shadow-glow: 0 0 20px hsla(0, 0%, 10%, 0.1);
     --shadow-card: 0 2px 15px hsla(0, 0%, 0%, 0.08);
+
+    --font-family: 'Lexend Deca', Arial, sans-serif;
   }
 }
 
@@ -100,5 +104,6 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-family);
   }
 }

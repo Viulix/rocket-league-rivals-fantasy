@@ -152,7 +152,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 font-roboto">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4" style={{ fontFamily: "var(--font-family)" }}>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">

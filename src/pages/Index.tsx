@@ -4,13 +4,13 @@ import { Link } from "react-router-dom";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background font-roboto">
+    <div className="min-h-screen bg-background font-roboto" style={{ fontFamily: "var(--font-family)" }}>
       {/* Navigation */}
       <nav className="border-b border-border bg-card/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              RocketLeague Fantasy Pro
+              Rocket Fantasy
             </div>
             <div className="flex space-x-4">
               <Link to="/login">
@@ -30,7 +30,7 @@ const Index = () => {
 
       {/* Hero Section */}
       <section className="px-4 py-20 text-center">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto" style={{ fontFamily: "var(--font-family)" }}>
           <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
             Build Your Ultimate
             <span className="block bg-gradient-primary bg-clip-text text-transparent">
@@ -186,7 +186,7 @@ const Index = () => {
       <footer className="border-t border-border bg-card/50 px-4 py-8">
         <div className="max-w-6xl mx-auto text-center">
           <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4">
-            RocketLeague Fantasy Pro
+            Rocket Fantasy
           </div>
           <p className="text-muted-foreground mb-4">
             The ultimate fantasy experience for Rocket League esports

@@ -225,16 +225,19 @@ const Leaderboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background font-roboto">
+    <div className="min-h-screen bg-background" style={{ fontFamily: "var(--font-family)" }}>
       <Navigation />
       <div className="p-4">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8 text-center animate-fade-in">
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
-              Global League Leaderboard
+            <h1
+              className="text-4xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent"
+              style={{ fontFamily: "var(--font-family)" }}
+            >
+              Global Leaderboard
             </h1>
-            <p className="text-muted-foreground">
-              See how your team ranks against players worldwide
+            <p className="text-muted-foreground" style={{ fontFamily: "var(--font-family)" }}>
+              View the top players and teams in Rocket League Fantasy
             </p>
           </div>
 
