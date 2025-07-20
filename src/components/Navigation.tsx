@@ -182,7 +182,7 @@ const Navigation = () => {
             className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent"
             style={{ fontFamily: "var(--font-family)" }}
           >
-            RocketLeague Fantasy Pro
+            Rocket Fantasy
           </Link>
           <div className="flex items-center space-x-4">
             <Link to="/">
@@ -317,7 +317,7 @@ const Navigation = () => {
                    style={{ fontFamily: "var(--font-family)" }}
                  >
                   <LogOut className="h-4 w-4" />
-                  Sign Out
+                  
                 </Button>
               </>
             ) : (

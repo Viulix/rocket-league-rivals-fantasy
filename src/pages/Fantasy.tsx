@@ -119,6 +119,8 @@ const Fantasy = () => {
 	const [leagues, setLeagues] = useState<any[]>([]);
 	const [currentLeague, setCurrentLeague] = useState<string>("");
 	const [teamName, setTeamName] = useState<string>("My Team");
+	const [events, setEvents] = useState<any[]>([]);
+	const [currentEvent, setCurrentEvent] = useState<string>("");
 	const navigate = useNavigate();
 	const { toast } = useToast();
 
@@ -269,6 +271,10 @@ const Fantasy = () => {
 		}
 	};
 
+	const handleEventChange = (eventId: string) => {
+		setCurrentEvent(eventId);
+	};
+
 	// Calculate team rating based on total score
 	const getTeamRating = () => {
 		if (selectedPlayers.length === 0) return { grade: 'F', color: 'text-muted-foreground' };
@@ -298,8 +304,31 @@ const Fantasy = () => {
 	};
 
 	const availablePlayers = mockPlayers.filter(
-		player => !selectedPlayers.find(p => p.id === player.id)
+		player =>
+			(!currentEvent || events.find(e => e.id === currentEvent)?.available_players.includes(player.id)) &&
+			!selectedPlayers.find(p => p.id === player.id)
 	);
+
+	useEffect(() => {
+		const loadEvents = async () => {
+			try {
+				const { data, error } = await supabase
+					.from("event")
+					.select("id, name, available_players");
+
+				if (error) {
+					console.error("Error loading events:", error);
+					return;
+				}
+
+				setEvents(data || []);
+			} catch (error) {
+				console.error("Error loading events:", error);
+			}
+		};
+
+		loadEvents();
+	}, []);
 
 	if (loading) {
 		return (
@@ -330,6 +359,29 @@ const Fantasy = () => {
 						<p className="text-muted-foreground" style={{ fontFamily: "var(--font-family)" }}>
 							Build your ultimate Rocket League fantasy team within budget
 						</p>
+					</div>
+
+					{/* Event Selection */}
+					<div className="mb-6">
+						<Card className="bg-gradient-card border-border shadow-card animate-scale-in hover:shadow-glow transition-all duration-300">
+							<CardHeader className="pb-3">
+								<CardTitle className="text-lg text-foreground">Event Selection</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<Select value={currentEvent} onValueChange={handleEventChange}>
+									<SelectTrigger className="bg-input border-border">
+										<SelectValue placeholder="Select an event to filter players" />
+									</SelectTrigger>
+									<SelectContent>
+										{events.map(event => (
+											<SelectItem key={event.id} value={event.id}>
+												{event.name}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</CardContent>
+						</Card>
 					</div>
 
 					{/* League and Team Settings */}
