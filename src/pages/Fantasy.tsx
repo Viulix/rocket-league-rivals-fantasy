@@ -281,6 +281,7 @@ const Fantasy = () => {
 
 		setImporting(true);
 		try {
+			console.log('Starting import from ballchasing...');
 			const response = await supabase.functions.invoke('fetch-ballchasing-players', {
 				body: {
 					groupId: 'regional-1-x1z5gypjs2',
@@ -288,13 +289,22 @@ const Fantasy = () => {
 				}
 			});
 
+			console.log('Function response:', response);
+
 			if (response.error) {
-				throw new Error(response.error.message);
+				console.error('Function error:', response.error);
+				throw new Error(response.error.message || 'Unknown function error');
 			}
+
+			if (!response.data) {
+				throw new Error('No data returned from function');
+			}
+
+			console.log('Import successful:', response.data);
 
 			toast({
 				title: "Success!",
-				description: response.data.message,
+				description: response.data.message || "Players imported successfully",
 			});
 
 			// Reload events to show the new event
