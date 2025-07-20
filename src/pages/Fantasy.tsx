@@ -311,6 +311,7 @@ const Fantasy = () => {
 		}
 	};
 
+	// Load events using direct API call to avoid TypeScript issues
 	const loadEvents = async () => {
 		try {
 			// Direct API call to avoid TypeScript issues with new tables
