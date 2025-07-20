@@ -11,7 +11,9 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Starting ballchasing import...')
     const { groupId, eventName } = await req.json()
+    console.log('Import request:', { groupId, eventName })
     
     // Get the ballchasing API key from Supabase secrets
     const ballchasingApiKey = Deno.env.get('BALLCHASING_API_KEY')
@@ -19,6 +21,7 @@ serve(async (req) => {
       throw new Error('Ballchasing API key not configured')
     }
 
+    console.log('Fetching from ballchasing API...')
     // Fetch group data from ballchasing API
     const ballchasingResponse = await fetch(`https://ballchasing.com/api/groups/${groupId}`, {
       headers: {
@@ -27,14 +30,21 @@ serve(async (req) => {
     })
 
     if (!ballchasingResponse.ok) {
-      throw new Error(`Ballchasing API error: ${ballchasingResponse.status}`)
+      const errorText = await ballchasingResponse.text()
+      console.error('Ballchasing API error:', ballchasingResponse.status, errorText)
+      throw new Error(`Ballchasing API error: ${ballchasingResponse.status} - ${errorText}`)
     }
 
     const groupData = await ballchasingResponse.json()
+    console.log('Group data received:', { playerCount: groupData.players?.length || 0 })
     
     // Extract players from the group data
     const players = groupData.players || []
     
+    if (players.length === 0) {
+      throw new Error('No players found in the group')
+    }
+
     // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -42,14 +52,16 @@ serve(async (req) => {
     const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
     const supabase = createClient(supabaseUrl, supabaseKey)
 
+    console.log('Checking for existing event...')
     // Get or create event
     let { data: event } = await supabase
       .from('events')
       .select('id')
       .eq('name', eventName)
-      .single()
+      .maybeSingle()
 
     if (!event) {
+      console.log('Creating new event...')
       const { data: newEvent, error } = await supabase
         .from('events')
         .insert({
@@ -59,27 +71,36 @@ serve(async (req) => {
         .select('id')
         .single()
       
-      if (error) throw error
+      if (error) {
+        console.error('Error creating event:', error)
+        throw error
+      }
       event = newEvent
+      console.log('Event created:', event.id)
+    } else {
+      console.log('Using existing event:', event.id)
     }
 
     // Process and insert players
-    const playersToInsert = []
     const playersForEvent = []
+    console.log(`Processing ${players.length} players...`)
     
-    for (const player of players) {
+    for (let i = 0; i < players.length; i++) {
+      const player = players[i]
       const platformId = `${player.platform}:${player.id}`
+      console.log(`Processing player ${i + 1}: ${player.name} (${platformId})`)
       
       // Check if player already exists
       const { data: existingPlayer } = await supabase
         .from('players')
         .select('id')
         .eq('platform_id', platformId)
-        .single()
+        .maybeSingle()
 
       let playerId
       if (existingPlayer) {
         playerId = existingPlayer.id
+        console.log(`Player exists: ${playerId}`)
       } else {
         // Insert new player
         const { data: newPlayer, error } = await supabase
@@ -91,31 +112,49 @@ serve(async (req) => {
           .select('id')
           .single()
         
-        if (error) throw error
+        if (error) {
+          console.error('Error creating player:', error)
+          throw error
+        }
         playerId = newPlayer.id
+        console.log(`Player created: ${playerId}`)
       }
       
       playersForEvent.push(playerId)
       
       // Create event_stats entry for this player
-      await supabase
+      const { error: statsError } = await supabase
         .from('event_stats')
         .upsert({
           player_id: playerId,
           events: [event.id],
           stats: player.cumulative || {},
           price: Math.floor(Math.random() * 1000) + 1500 // Temporary random price
+        }, {
+          onConflict: 'player_id'
         })
+      
+      if (statsError) {
+        console.error('Error creating event stats:', statsError)
+        // Don't throw here, just log the error
+      }
     }
 
+    console.log('Updating event with available players...')
     // Update the event with available players
-    await supabase
+    const { error: updateError } = await supabase
       .from('events')
       .update({
         available_players: playersForEvent
       })
       .eq('id', event.id)
 
+    if (updateError) {
+      console.error('Error updating event:', updateError)
+      throw updateError
+    }
+
+    console.log('Import completed successfully')
     return new Response(
       JSON.stringify({ 
         success: true, 
@@ -130,7 +169,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error in ballchasing import:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
