@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
 import LeagueManagement from "@/components/LeagueManagement";
 import { User } from "@supabase/supabase-js";
+import { Download } from "lucide-react";
 
 // Player and stats interfaces
 interface Player {
@@ -41,6 +42,7 @@ const Fantasy = () => {
 	const [teamName, setTeamName] = useState<string>("My Team");
 	const [events, setEvents] = useState<any[]>([]);
 	const [currentEvent, setCurrentEvent] = useState<string>("");
+	const [importing, setImporting] = useState(false);
 	const navigate = useNavigate();
 	const { toast } = useToast();
 
@@ -274,23 +276,58 @@ const Fantasy = () => {
 		);
 	};
 
-	useEffect(() => {
-		const loadEvents = async () => {
-			try {
-				// Direct API call to avoid TypeScript issues
-				const response = await fetch(`https://tliuublslpgztrxqalcw.supabase.co/rest/v1/events?select=id,name,starts_at`, {
-					headers: {
-						'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE',
-						'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE'
-					}
-				});
-				const events = await response.json();
-				setEvents(events || []);
-			} catch (error) {
-				console.error("Error loading events:", error);
-			}
-		};
+	const importPlayersFromBallchasing = async () => {
+		if (!user) return;
 
+		setImporting(true);
+		try {
+			const response = await supabase.functions.invoke('fetch-ballchasing-players', {
+				body: {
+					groupId: 'regional-1-x1z5gypjs2',
+					eventName: 'EU Regional 1'
+				}
+			});
+
+			if (response.error) {
+				throw new Error(response.error.message);
+			}
+
+			toast({
+				title: "Success!",
+				description: response.data.message,
+			});
+
+			// Reload events to show the new event
+			loadEvents();
+		} catch (error) {
+			console.error('Import error:', error);
+			toast({
+				title: "Import Failed",
+				description: error instanceof Error ? error.message : "Failed to import players from ballchasing",
+				variant: "destructive"
+			});
+		} finally {
+			setImporting(false);
+		}
+	};
+
+	const loadEvents = async () => {
+		try {
+			// Direct API call to avoid TypeScript issues
+			const response = await fetch(`https://tliuublslpgztrxqalcw.supabase.co/rest/v1/events?select=id,name,starts_at`, {
+				headers: {
+					'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE',
+					'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE'
+				}
+			});
+			const events = await response.json();
+			setEvents(events || []);
+		} catch (error) {
+			console.error("Error loading events:", error);
+		}
+	};
+
+	useEffect(() => {
 		loadEvents();
 	}, []);
 
@@ -329,7 +366,19 @@ const Fantasy = () => {
 					<div className="mb-6">
 						<Card className="bg-gradient-card border-border shadow-card animate-scale-in hover:shadow-glow transition-all duration-300">
 							<CardHeader className="pb-3">
-								<CardTitle className="text-lg text-foreground">Event Selection</CardTitle>
+								<div className="flex items-center justify-between">
+									<CardTitle className="text-lg text-foreground">Event Selection</CardTitle>
+									<Button
+										onClick={importPlayersFromBallchasing}
+										disabled={importing || !user}
+										variant="outline"
+										size="sm"
+										className="flex items-center gap-2"
+									>
+										<Download className="h-4 w-4" />
+										{importing ? "Importing..." : "Import EU Regional 1"}
+									</Button>
+								</div>
 							</CardHeader>
 							<CardContent>
 								<Select value={currentEvent} onValueChange={handleEventChange}>
