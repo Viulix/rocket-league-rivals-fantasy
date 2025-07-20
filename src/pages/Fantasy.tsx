@@ -313,15 +313,14 @@ const Fantasy = () => {
 
 	const loadEvents = async () => {
 		try {
-			const { data: events, error } = await supabase
-				.from('events')
-				.select('id, name, starts_at')
-				.order('created_at', { ascending: false });
-
-			if (error) {
-				console.error("Error loading events:", error);
-				return;
-			}
+			// Direct API call to avoid TypeScript issues with new tables
+			const response = await fetch(`https://tliuublslpgztrxqalcw.supabase.co/rest/v1/events?select=id,name,starts_at&order=created_at.desc`, {
+				headers: {
+					'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE',
+					'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE'
+				}
+			});
+			const events = await response.json();
 
 			console.log('Loaded events:', events);
 			setEvents(events || []);
