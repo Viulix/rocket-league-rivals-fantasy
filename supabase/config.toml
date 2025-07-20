@@ -2,3 +2,6 @@ project_id = "tliuublslpgztrxqalcw"
 
 [functions.fetch-ballchasing-players]
 verify_jwt = false
+
+[functions.test-import]
+verify_jwt = false

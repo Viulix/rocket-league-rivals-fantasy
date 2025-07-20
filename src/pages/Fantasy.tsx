@@ -321,6 +321,35 @@ const Fantasy = () => {
 		}
 	};
 
+	const testImport = async () => {
+		setImporting(true);
+		try {
+			console.log('Testing import functionality...');
+			const response = await supabase.functions.invoke('test-import');
+
+			console.log('Test response:', response);
+
+			if (response.error) {
+				console.error('Test error:', response.error);
+				throw new Error(response.error.message || 'Test failed');
+			}
+
+			toast({
+				title: "Test Successful!",
+				description: `Found ${response.data.ballchasingPlayers} players. All systems working.`,
+			});
+		} catch (error) {
+			console.error('Test error:', error);
+			toast({
+				title: "Test Failed",
+				description: error instanceof Error ? error.message : "Test failed",
+				variant: "destructive"
+			});
+		} finally {
+			setImporting(false);
+		}
+	};
+
 	// Load events using direct API call to avoid TypeScript issues
 	const loadEvents = async () => {
 		try {
@@ -381,16 +410,27 @@ const Fantasy = () => {
 							<CardHeader className="pb-3">
 								<div className="flex items-center justify-between">
 									<CardTitle className="text-lg text-foreground">Event Selection</CardTitle>
-									<Button
-										onClick={importPlayersFromBallchasing}
-										disabled={importing || !user}
-										variant="outline"
-										size="sm"
-										className="flex items-center gap-2"
-									>
-										<Download className="h-4 w-4" />
-										{importing ? "Importing..." : "Import EU Regional 1"}
-									</Button>
+									<div className="flex gap-2">
+										<Button
+											onClick={testImport}
+											disabled={importing || !user}
+											variant="secondary"
+											size="sm"
+											className="flex items-center gap-2"
+										>
+											Test Import
+										</Button>
+										<Button
+											onClick={importPlayersFromBallchasing}
+											disabled={importing || !user}
+											variant="outline"
+											size="sm"
+											className="flex items-center gap-2"
+										>
+											<Download className="h-4 w-4" />
+											{importing ? "Importing..." : "Import EU Regional 1"}
+										</Button>
+									</div>
 								</div>
 							</CardHeader>
 							<CardContent>
