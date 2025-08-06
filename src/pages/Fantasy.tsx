@@ -241,7 +241,7 @@ const Fantasy = () => {
 			const playersWithStats: PlayerWithStats[] = players?.map((player: any) => {
 				const stats = eventStats?.find((stat: any) => stat.player_id === player.id);
 				return {
-					id: player.id,
+					id: player.id.toString(), // Convert bigint to string for UI
 					name: player.name || 'Unknown Player',
 					platform_id: player.platform_id,
 					price: stats?.price || 1000,
@@ -249,7 +249,7 @@ const Fantasy = () => {
 				};
 			}).filter((player: any) => {
 				// Only include players that have stats (are part of events)
-				return eventStats?.some((stat: any) => stat.player_id === player.id);
+				return eventStats?.some((stat: any) => stat.player_id === parseInt(player.id));
 			}) || [];
 
 			setAvailablePlayers(playersWithStats);
