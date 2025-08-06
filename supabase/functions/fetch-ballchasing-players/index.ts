@@ -120,13 +120,13 @@ serve(async (req) => {
         console.log(`Player created: ${playerId}`)
       }
       
-      playersForEvent.push(playerId)
+      playersForEvent.push(parseInt(playerId)) // Convert to number for events table
       
       // Create event_stats entry for this player
       const { error: statsError } = await supabase
         .from('event_stats')
         .upsert({
-          player_id: playerId,
+          player_id: parseInt(playerId), // Convert to number since players.id is bigint
           events: [event.id],
           stats: player.cumulative || {},
           price: Math.floor(Math.random() * 1000) + 1500 // Temporary random price
