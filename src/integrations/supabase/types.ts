@@ -10,10 +10,67 @@ export type Database = {
   // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
+      event_stats: {
+        Row: {
+          created_at: string
+          events: string[] | null
+          id: string
+          player_id: string | null
+          price: number | null
+          stats: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          events?: string[] | null
+          id?: string
+          player_id?: string | null
+          price?: number | null
+          stats?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          events?: string[] | null
+          id?: string
+          player_id?: string | null
+          price?: number | null
+          stats?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      events: {
+        Row: {
+          available_players: string[] | null
+          created_at: string
+          id: string
+          name: string | null
+          starts_at: string | null
+          stats: string[] | null
+        }
+        Insert: {
+          available_players?: string[] | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          starts_at?: string | null
+          stats?: string[] | null
+        }
+        Update: {
+          available_players?: string[] | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          starts_at?: string | null
+          stats?: string[] | null
+        }
+        Relationships: []
+      }
       fantasy_teams: {
         Row: {
           created_at: string
@@ -114,6 +171,27 @@ export type Database = {
           name?: string
           password?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      players: {
+        Row: {
+          created_at: string
+          id: number
+          name: string | null
+          platform_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          name?: string | null
+          platform_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          name?: string | null
+          platform_id?: string
         }
         Relationships: []
       }
