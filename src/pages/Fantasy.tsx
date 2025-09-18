@@ -10,12 +10,35 @@ import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
 import LeagueManagement from "@/components/LeagueManagement";
 import { User } from "@supabase/supabase-js";
+import { Download } from "lucide-react";
 
+<<<<<<< HEAD
 // Mock player data - will be replaced with Supabase data
 const mockPlayers = [];
+=======
+// Player and stats interfaces
+interface Player {
+	id: string;
+	name: string;
+	platform_id: string;
+}
+
+interface EventStats {
+	id: string;
+	player_id: string;
+	stats: any;
+	price: number;
+}
+
+interface PlayerWithStats extends Player {
+	price: number;
+	stats: any;
+}
+>>>>>>> a5d11eb19db76b884e0ca37d8196ca4aa3d891be
 
 const Fantasy = () => {
-	const [selectedPlayers, setSelectedPlayers] = useState<typeof mockPlayers>([]);
+	const [selectedPlayers, setSelectedPlayers] = useState<PlayerWithStats[]>([]);
+	const [availablePlayers, setAvailablePlayers] = useState<PlayerWithStats[]>([]);
 	const [budget] = useState(12000);
 	const [user, setUser] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -24,6 +47,7 @@ const Fantasy = () => {
 	const [teamName, setTeamName] = useState<string>("My Team");
 	const [events, setEvents] = useState<any[]>([]);
 	const [currentEvent, setCurrentEvent] = useState<string>("");
+	const [importing, setImporting] = useState(false);
 	const navigate = useNavigate();
 
 	const totalCost = selectedPlayers.reduce((sum, player) => sum + player.price, 0);
@@ -118,7 +142,7 @@ const Fantasy = () => {
 			}
 
 			if (data) {
-				setSelectedPlayers(data.selected_players as typeof mockPlayers);
+				setSelectedPlayers((data.selected_players as unknown) as PlayerWithStats[]);
 				setTeamName(data.team_name || 'My Team');
 			} else {
 				setSelectedPlayers([]);
@@ -140,7 +164,7 @@ const Fantasy = () => {
 							user_id: user.id,
 							league_id: currentLeague,
 							team_name: teamName,
-							selected_players: selectedPlayers,
+							selected_players: selectedPlayers as any,
 							total_cost: totalCost,
 						}, {
 							onConflict: 'user_id,league_id'
@@ -173,27 +197,72 @@ const Fantasy = () => {
 		}
 	};
 
-	const handleEventChange = (eventId: string) => {
+	const handleEventChange = async (eventId: string) => {
 		setCurrentEvent(eventId);
+		if (eventId) {
+			await loadPlayersForEvent(eventId);
+		} else {
+			setAvailablePlayers([]);
+		}
 	};
 
-	// Calculate team rating based on total score
+	// Calculate team rating based on total value
 	const getTeamRating = () => {
 		if (selectedPlayers.length === 0) return { grade: 'F', color: 'text-muted-foreground' };
 
-		const totalScore = selectedPlayers.reduce((sum, player) => sum + player.score, 0);
-		const avgScore = totalScore / selectedPlayers.length;
+		const totalValue = selectedPlayers.reduce((sum, player) => sum + player.price, 0);
+		const avgValue = totalValue / selectedPlayers.length;
 
-		if (avgScore >= 1200) return { grade: 'S', color: 'text-green-400' };
-		if (avgScore >= 1100) return { grade: 'A', color: 'text-blue-400' };
-		if (avgScore >= 1000) return { grade: 'B', color: 'text-yellow-400' };
-		if (avgScore >= 900) return { grade: 'C', color: 'text-orange-400' };
+		if (avgValue >= 2000) return { grade: 'S', color: 'text-green-400' };
+		if (avgValue >= 1500) return { grade: 'A', color: 'text-blue-400' };
+		if (avgValue >= 1000) return { grade: 'B', color: 'text-yellow-400' };
+		if (avgValue >= 500) return { grade: 'C', color: 'text-orange-400' };
 		return { grade: 'D', color: 'text-red-400' };
 	};
 
 	const teamRating = getTeamRating();
 
-	const addPlayer = (player: typeof mockPlayers[0]) => {
+	const loadPlayersForEvent = async (eventId: string) => {
+		try {
+			// Direct API calls to avoid TypeScript issues with new tables
+			const playersResponse = await fetch(`https://tliuublslpgztrxqalcw.supabase.co/rest/v1/players?select=*`, {
+				headers: {
+					'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE',
+					'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE'
+				}
+			});
+			const players = await playersResponse.json();
+
+			const statsResponse = await fetch(`https://tliuublslpgztrxqalcw.supabase.co/rest/v1/event_stats?select=*`, {
+				headers: {
+					'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE',
+					'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE'
+				}
+			});
+			const eventStats = await statsResponse.json();
+
+			// Combine players with their stats
+			const playersWithStats: PlayerWithStats[] = players?.map((player: any) => {
+				const stats = eventStats?.find((stat: any) => stat.player_id === player.id);
+				return {
+					id: player.id.toString(), // Convert bigint to string for UI
+					name: player.name || 'Unknown Player',
+					platform_id: player.platform_id,
+					price: stats?.price || 1000,
+					stats: stats?.stats || {}
+				};
+			}).filter((player: any) => {
+				// Only include players that have stats (are part of events)
+				return eventStats?.some((stat: any) => stat.player_id === parseInt(player.id));
+			}) || [];
+
+			setAvailablePlayers(playersWithStats);
+		} catch (error) {
+			console.error('Error loading players for event:', error);
+		}
+	};
+
+	const addPlayer = (player: PlayerWithStats) => {
 		if (selectedPlayers.length >= maxPlayers) return;
 		if (totalCost + player.price > budget) return;
 		if (selectedPlayers.find(p => p.id === player.id)) return;
@@ -201,34 +270,110 @@ const Fantasy = () => {
 		setSelectedPlayers([...selectedPlayers, player]);
 	};
 
-	const removePlayer = (playerId: number) => {
+	const removePlayer = (playerId: string) => {
 		setSelectedPlayers(selectedPlayers.filter(p => p.id !== playerId));
 	};
 
-	const availablePlayers = mockPlayers.filter(
-		player =>
-			(!currentEvent || events.find(e => e.id === currentEvent)?.available_players.includes(player.id)) &&
+	const getFilteredAvailablePlayers = () => {
+		return availablePlayers.filter(player => 
 			!selectedPlayers.find(p => p.id === player.id)
-	);
+		);
+	};
+
+	const importPlayersFromBallchasing = async () => {
+		if (!user) return;
+
+		setImporting(true);
+		try {
+			console.log('Starting import from ballchasing...');
+			const response = await supabase.functions.invoke('fetch-ballchasing-players', {
+				body: {
+					groupId: 'regional-1-x1z5gypjs2',
+					eventName: 'EU Regional 1'
+				}
+			});
+
+			console.log('Function response:', response);
+
+			if (response.error) {
+				console.error('Function error:', response.error);
+				throw new Error(response.error.message || 'Unknown function error');
+			}
+
+			if (!response.data) {
+				throw new Error('No data returned from function');
+			}
+
+			console.log('Import successful:', response.data);
+
+			toast({
+				title: "Success!",
+				description: response.data.message || "Players imported successfully",
+			});
+
+			// Reload events to show the new event
+			loadEvents();
+		} catch (error) {
+			console.error('Import error:', error);
+			toast({
+				title: "Import Failed",
+				description: error instanceof Error ? error.message : "Failed to import players from ballchasing",
+				variant: "destructive"
+			});
+		} finally {
+			setImporting(false);
+		}
+	};
+
+	const testImport = async () => {
+		setImporting(true);
+		try {
+			console.log('Testing import functionality...');
+			const response = await supabase.functions.invoke('test-import');
+
+			console.log('Test response:', response);
+
+			if (response.error) {
+				console.error('Test error:', response.error);
+				throw new Error(response.error.message || 'Test failed');
+			}
+
+			toast({
+				title: "Test Successful!",
+				description: `Found ${response.data.ballchasingPlayers} players. All systems working.`,
+			});
+		} catch (error) {
+			console.error('Test error:', error);
+			toast({
+				title: "Test Failed",
+				description: error instanceof Error ? error.message : "Test failed",
+				variant: "destructive"
+			});
+		} finally {
+			setImporting(false);
+		}
+	};
+
+	// Load events using direct API call to avoid TypeScript issues
+	const loadEvents = async () => {
+		try {
+			// Direct API call to avoid TypeScript issues with new tables
+			const response = await fetch(`https://tliuublslpgztrxqalcw.supabase.co/rest/v1/events?select=id,name,starts_at&order=created_at.desc`, {
+				headers: {
+					'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE',
+					'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE'
+				}
+			});
+			const events = await response.json();
+
+			console.log('Loaded events:', events);
+			setEvents(events || []);
+		} catch (error) {
+			console.error("Error loading events:", error);
+		}
+	};
 
 	useEffect(() => {
-		const loadEvents = async () => {
-			try {
-				const { data, error } = await supabase
-					.from("event")
-					.select("id, name, available_players");
-
-				if (error) {
-					console.error("Error loading events:", error);
-					return;
-				}
-
-				setEvents(data || []);
-			} catch (error) {
-				console.error("Error loading events:", error);
-			}
-		};
-
 		loadEvents();
 	}, []);
 
@@ -267,7 +412,30 @@ const Fantasy = () => {
 					<div className="mb-6">
 						<Card className="bg-gradient-card border-border shadow-card animate-scale-in hover:shadow-glow transition-all duration-300">
 							<CardHeader className="pb-3">
-								<CardTitle className="text-lg text-foreground">Event Selection</CardTitle>
+								<div className="flex items-center justify-between">
+									<CardTitle className="text-lg text-foreground">Event Selection</CardTitle>
+									<div className="flex gap-2">
+										<Button
+											onClick={testImport}
+											disabled={importing || !user}
+											variant="secondary"
+											size="sm"
+											className="flex items-center gap-2"
+										>
+											Test Import
+										</Button>
+										<Button
+											onClick={importPlayersFromBallchasing}
+											disabled={importing || !user}
+											variant="outline"
+											size="sm"
+											className="flex items-center gap-2"
+										>
+											<Download className="h-4 w-4" />
+											{importing ? "Importing..." : "Import EU Regional 1"}
+										</Button>
+									</div>
+								</div>
 							</CardHeader>
 							<CardContent>
 								<Select value={currentEvent} onValueChange={handleEventChange}>
@@ -368,15 +536,18 @@ const Fantasy = () => {
 												<div className="flex-1">
 													<div className="font-medium text-foreground">{player.name}</div>
 													<div className="text-xs text-muted-foreground">
-														{player.team} • {player.position}
+														{player.platform_id}
 													</div>
 													<div className="text-xs text-muted-foreground mt-1">
-														G: {player.goals} | A: {player.assists} | S: {player.saves} | GG: {player.goldenGoals}
+														{player.stats && typeof player.stats === 'object' && 
+															Object.entries(player.stats).map(([key, value]) => 
+																`${key}: ${value}`
+															).join(' | ')
+														}
 													</div>
 												</div>
 												<div className="text-right">
 													<div className="font-bold text-primary">${player.price.toLocaleString()}</div>
-													<div className="text-xs text-muted-foreground">{player.score} pts</div>
 													<Button
 														variant="outline"
 														size="sm"
@@ -403,6 +574,8 @@ const Fantasy = () => {
 									<CardDescription style={{ fontFamily: "var(--font-family)" }}>
 										{!currentLeague
 											? "Select a league first to start building your team"
+											: !currentEvent
+											? "Select an event to view available players"
 											: "Select players to add to your fantasy team"}
 									</CardDescription>
 								</CardHeader>
@@ -411,9 +584,17 @@ const Fantasy = () => {
 										<div className="text-center py-12">
 											<p className="text-muted-foreground">Please select a league to view available players</p>
 										</div>
+									) : !currentEvent ? (
+										<div className="text-center py-12">
+											<p className="text-muted-foreground">Please select an event to view available players</p>
+										</div>
+									) : availablePlayers.length === 0 ? (
+										<div className="text-center py-12">
+											<p className="text-muted-foreground">No players available for this event</p>
+										</div>
 									) : (
 										<div className="grid md:grid-cols-2 gap-4">
-											{availablePlayers.map((player) => {
+											{getFilteredAvailablePlayers().map((player) => {
 												const canAfford = totalCost + player.price <= budget;
 												const hasSpace = selectedPlayers.length < maxPlayers;
 												const canAdd = canAfford && hasSpace;
@@ -431,15 +612,16 @@ const Fantasy = () => {
 															<div>
 																<h3 className="font-bold text-foreground">{player.name}</h3>
 																<p className="text-sm text-muted-foreground">
-																	{player.team} • {player.position}
+																	{player.platform_id}
 																</p>
 																<div className="text-xs text-muted-foreground mt-1">
-																	G: {player.goals} | A: {player.assists} | S: {player.saves} | GG: {player.goldenGoals}
+																	{player.stats && typeof player.stats === 'object' && 
+																		Object.entries(player.stats).map(([key, value]) => 
+																			`${key}: ${value}`
+																		).join(' | ')
+																	}
 																</div>
 															</div>
-															<Badge variant="outline" className="text-xs">
-																{player.score} pts
-															</Badge>
 														</div>
 
 														<div className="flex items-center justify-between">
