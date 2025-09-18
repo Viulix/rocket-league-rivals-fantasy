@@ -12,10 +12,6 @@ import LeagueManagement from "@/components/LeagueManagement";
 import { User } from "@supabase/supabase-js";
 import { Download } from "lucide-react";
 
-<<<<<<< HEAD
-// Mock player data - will be replaced with Supabase data
-const mockPlayers = [];
-=======
 // Player and stats interfaces
 interface Player {
 	id: string;
@@ -34,7 +30,6 @@ interface PlayerWithStats extends Player {
 	price: number;
 	stats: any;
 }
->>>>>>> a5d11eb19db76b884e0ca37d8196ca4aa3d891be
 
 const Fantasy = () => {
 	const [selectedPlayers, setSelectedPlayers] = useState<PlayerWithStats[]>([]);
