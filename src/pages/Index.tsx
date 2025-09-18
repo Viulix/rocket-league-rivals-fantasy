@@ -23,6 +23,9 @@ const Index = () => {
                   Get Started
                 </Button>
               </Link>
+                <Button className="bg-gradient-primary text-primary-foreground font-medium hover:shadow-glow transition-smooth">
+                  
+                </Button>
             </div>
           </div>
         </div>
@@ -32,10 +35,7 @@ const Index = () => {
       <section className="px-4 py-20 text-center">
         <div className="max-w-4xl mx-auto" style={{ fontFamily: "var(--font-family)" }}>
           <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-            Build Your Ultimate
-            <span className="block bg-gradient-primary bg-clip-text text-transparent">
-              Rocket League Fantasy Team
-            </span>
+            Rocket Fantasy
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Create fantasy teams, make predictions, and compete with friends in the ultimate Rocket League esports experience.
@@ -49,13 +49,6 @@ const Index = () => {
                 Start Building Your Team
               </Button>
             </Link>
-            <Button 
-              variant="outline" 
-              size="lg"
-              className="font-medium text-lg px-8 py-3"
-            >
-              Watch Demo
-            </Button>
           </div>
         </div>
       </section>

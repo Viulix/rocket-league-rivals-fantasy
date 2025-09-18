@@ -12,104 +12,7 @@ import LeagueManagement from "@/components/LeagueManagement";
 import { User } from "@supabase/supabase-js";
 
 // Mock player data - will be replaced with Supabase data
-const mockPlayers = [
-	{
-		id: 1,
-		name: "jstn",
-		team: "NRG",
-		position: "Striker",
-		price: 2500,
-		score: 1245,
-		goals: 89,
-		assists: 67,
-		saves: 23,
-		goldenGoals: 12,
-	},
-	{
-		id: 2,
-		name: "GarrettG",
-		team: "NRG",
-		position: "Support",
-		price: 2200,
-		score: 1156,
-		goals: 45,
-		assists: 89,
-		saves: 56,
-		goldenGoals: 8,
-	},
-	{
-		id: 3,
-		name: "SquishyMuffinz",
-		team: "NRG",
-		position: "Defense",
-		price: 2300,
-		score: 1198,
-		goals: 34,
-		assists: 78,
-		saves: 134,
-		goldenGoals: 5,
-	},
-	{
-		id: 4,
-		name: "Aztral",
-		team: "BDS",
-		position: "Striker",
-		price: 2400,
-		score: 1187,
-		goals: 92,
-		assists: 56,
-		saves: 18,
-		goldenGoals: 15,
-	},
-	{
-		id: 5,
-		name: "Monkey M.",
-		team: "BDS",
-		position: "Support",
-		price: 2100,
-		score: 1098,
-		goals: 38,
-		assists: 95,
-		saves: 67,
-		goldenGoals: 7,
-	},
-	{
-		id: 6,
-		name: "ExoTiiK",
-		team: "BDS",
-		position: "Defense",
-		price: 2000,
-		score: 1034,
-		goals: 25,
-		assists: 71,
-		saves: 156,
-		goldenGoals: 3,
-	},
-	{
-		id: 7,
-		name: "Joyo",
-		team: "G2",
-		position: "Striker",
-		price: 2300,
-		score: 1167,
-		goals: 78,
-		assists: 62,
-		saves: 31,
-		goldenGoals: 11,
-	},
-	{
-		id: 8,
-		name: "Chicago",
-		team: "G2",
-		position: "Support",
-		price: 2000,
-		score: 1087,
-		goals: 42,
-		assists: 84,
-		saves: 49,
-		goldenGoals: 6,
-	},
-];
+const mockPlayers = [];
 
 const Fantasy = () => {
 	const [selectedPlayers, setSelectedPlayers] = useState<typeof mockPlayers>([]);
@@ -122,7 +25,6 @@ const Fantasy = () => {
 	const [events, setEvents] = useState<any[]>([]);
 	const [currentEvent, setCurrentEvent] = useState<string>("");
 	const navigate = useNavigate();
-	const { toast } = useToast();
 
 	const totalCost = selectedPlayers.reduce((sum, player) => sum + player.price, 0);
 	const remainingBudget = budget - totalCost;

@@ -156,7 +156,7 @@ const Login = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            RocketLeague Fantasy Pro
+            Rocket Fantasy
           </Link>
         </div>
         
