@@ -82,7 +82,6 @@ serve(async (req) => {
     }
 
     // Process and insert players
-    const playersForEvent = []
     console.log(`Processing ${players.length} players...`)
     
     for (let i = 0; i < players.length; i++) {
@@ -120,38 +119,31 @@ serve(async (req) => {
         console.log(`Player created: ${playerId}`)
       }
       
-      playersForEvent.push(parseInt(playerId)) // Convert to number for events table
+      // Generate random stats for now (goals + assists + score)
+      const goals = Math.floor(Math.random() * 5)
+      const assists = Math.floor(Math.random() * 4)
+      const score = Math.floor(Math.random() * 500) + 200
       
-      // Create event_stats entry for this player
+      // Create player_event_stats entry for this player in this event
       const { error: statsError } = await supabase
-        .from('event_stats')
+        .from('player_event_stats')
         .upsert({
-          player_id: parseInt(playerId), // Convert to number since players.id is bigint
-          events: [event.id],
-          stats: player.cumulative || {},
-          price: Math.floor(Math.random() * 1000) + 1500 // Temporary random price
+          player_id: playerId,
+          event_id: event.id,
+          price: 1200, // Default price as requested
+          goals: goals,
+          assists: assists,
+          score: score
         }, {
-          onConflict: 'player_id'
+          onConflict: 'player_id,event_id'
         })
       
       if (statsError) {
-        console.error('Error creating event stats:', statsError)
+        console.error('Error creating player event stats:', statsError)
         // Don't throw here, just log the error
+      } else {
+        console.log(`Stats created for player ${playerId}: ${goals}G, ${assists}A, ${score}S`)
       }
-    }
-
-    console.log('Updating event with available players...')
-    // Update the event with available players
-    const { error: updateError } = await supabase
-      .from('events')
-      .update({
-        available_players: playersForEvent
-      })
-      .eq('id', event.id)
-
-    if (updateError) {
-      console.error('Error updating event:', updateError)
-      throw updateError
     }
 
     console.log('Import completed successfully')

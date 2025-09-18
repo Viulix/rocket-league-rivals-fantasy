@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast, toast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
 import LeagueManagement from "@/components/LeagueManagement";
+import AdminEventManager from "@/components/AdminEventManager";
 import { User } from "@supabase/supabase-js";
 import { Download } from "lucide-react";
 
@@ -219,41 +220,38 @@ const Fantasy = () => {
 
 	const loadPlayersForEvent = async (eventId: string) => {
 		try {
-			// Direct API calls to avoid TypeScript issues with new tables
-			const playersResponse = await fetch(`https://tliuublslpgztrxqalcw.supabase.co/rest/v1/players?select=*`, {
+			// Fetch players and their stats for the selected event using the new player_event_stats table
+			const statsResponse = await fetch(`https://tliuublslpgztrxqalcw.supabase.co/rest/v1/player_event_stats?select=*,players(id,name,platform_id)&event_id=eq.${eventId}`, {
 				headers: {
 					'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE',
 					'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE'
 				}
 			});
-			const players = await playersResponse.json();
+			const playerEventStats = await statsResponse.json();
 
-			const statsResponse = await fetch(`https://tliuublslpgztrxqalcw.supabase.co/rest/v1/event_stats?select=*`, {
-				headers: {
-					'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE',
-					'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE'
-				}
-			});
-			const eventStats = await statsResponse.json();
+			console.log('Player event stats:', playerEventStats);
 
-			// Combine players with their stats
-			const playersWithStats: PlayerWithStats[] = players?.map((player: any) => {
-				const stats = eventStats?.find((stat: any) => stat.player_id === player.id);
+			// Transform the data to match our PlayerWithStats interface
+			const playersWithStats: PlayerWithStats[] = playerEventStats?.map((stat: any) => {
 				return {
-					id: player.id.toString(), // Convert bigint to string for UI
-					name: player.name || 'Unknown Player',
-					platform_id: player.platform_id,
-					price: stats?.price || 1000,
-					stats: stats?.stats || {}
+					id: stat.player_id.toString(), // Convert bigint to string for UI
+					name: stat.players?.name || 'Unknown Player',
+					platform_id: stat.players?.platform_id || 'Unknown',
+					price: stat.price || 1200,
+					stats: {
+						goals: stat.goals,
+						assists: stat.assists,
+						score: stat.score,
+						total: stat.total_stats
+					}
 				};
-			}).filter((player: any) => {
-				// Only include players that have stats (are part of events)
-				return eventStats?.some((stat: any) => stat.player_id === parseInt(player.id));
 			}) || [];
 
+			console.log('Players with stats:', playersWithStats);
 			setAvailablePlayers(playersWithStats);
 		} catch (error) {
 			console.error('Error loading players for event:', error);
+			setAvailablePlayers([]);
 		}
 	};
 
@@ -403,50 +401,56 @@ const Fantasy = () => {
 						</p>
 					</div>
 
-					{/* Event Selection */}
-					<div className="mb-6">
-						<Card className="bg-gradient-card border-border shadow-card animate-scale-in hover:shadow-glow transition-all duration-300">
-							<CardHeader className="pb-3">
-								<div className="flex items-center justify-between">
-									<CardTitle className="text-lg text-foreground">Event Selection</CardTitle>
-									<div className="flex gap-2">
-										<Button
-											onClick={testImport}
-											disabled={importing || !user}
-											variant="secondary"
-											size="sm"
-											className="flex items-center gap-2"
-										>
-											Test Import
-										</Button>
-										<Button
-											onClick={importPlayersFromBallchasing}
-											disabled={importing || !user}
-											variant="outline"
-											size="sm"
-											className="flex items-center gap-2"
-										>
-											<Download className="h-4 w-4" />
-											{importing ? "Importing..." : "Import EU Regional 1"}
-										</Button>
+					{/* Event Selection and Admin Panel */}
+					<div className="grid md:grid-cols-3 gap-6 mb-6">
+						<div className="md:col-span-2">
+							<Card className="bg-gradient-card border-border shadow-card animate-scale-in hover:shadow-glow transition-all duration-300">
+								<CardHeader className="pb-3">
+									<div className="flex items-center justify-between">
+										<CardTitle className="text-lg text-foreground">Event Selection</CardTitle>
+										<div className="flex gap-2">
+											<Button
+												onClick={testImport}
+												disabled={importing || !user}
+												variant="secondary"
+												size="sm"
+												className="flex items-center gap-2"
+											>
+												Test Import
+											</Button>
+											<Button
+												onClick={importPlayersFromBallchasing}
+												disabled={importing || !user}
+												variant="outline"
+												size="sm"
+												className="flex items-center gap-2"
+											>
+												<Download className="h-4 w-4" />
+												{importing ? "Importing..." : "Import EU Regional 1"}
+											</Button>
+										</div>
 									</div>
-								</div>
-							</CardHeader>
-							<CardContent>
-								<Select value={currentEvent} onValueChange={handleEventChange}>
-									<SelectTrigger className="bg-input border-border">
-										<SelectValue placeholder="Select an event to filter players" />
-									</SelectTrigger>
-									<SelectContent>
-										{events.map(event => (
-											<SelectItem key={event.id} value={event.id}>
-												{event.name}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</CardContent>
-						</Card>
+								</CardHeader>
+								<CardContent>
+									<Select value={currentEvent} onValueChange={handleEventChange}>
+										<SelectTrigger className="bg-input border-border">
+											<SelectValue placeholder="Select an event to filter players" />
+										</SelectTrigger>
+										<SelectContent>
+											{events.map(event => (
+												<SelectItem key={event.id} value={event.id}>
+													{event.name}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</CardContent>
+							</Card>
+						</div>
+						
+						<div className="md:col-span-1">
+							<AdminEventManager onEventAdded={loadEvents} />
+						</div>
 					</div>
 
 					{/* League and Team Settings */}

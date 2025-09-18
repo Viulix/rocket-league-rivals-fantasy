@@ -7,67 +7,37 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
-      event_stats: {
-        Row: {
-          created_at: string
-          events: string[] | null
-          id: string
-          player_id: string | null
-          price: number | null
-          stats: Json | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string
-          events?: string[] | null
-          id?: string
-          player_id?: string | null
-          price?: number | null
-          stats?: Json | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string
-          events?: string[] | null
-          id?: string
-          player_id?: string | null
-          price?: number | null
-          stats?: Json | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       events: {
         Row: {
-          available_players: string[] | null
+          ballchasing_group_id: string | null
           created_at: string
+          description: string | null
           id: string
           name: string | null
           starts_at: string | null
-          stats: string[] | null
         }
         Insert: {
-          available_players?: string[] | null
+          ballchasing_group_id?: string | null
           created_at?: string
+          description?: string | null
           id?: string
           name?: string | null
           starts_at?: string | null
-          stats?: string[] | null
         }
         Update: {
-          available_players?: string[] | null
+          ballchasing_group_id?: string | null
           created_at?: string
+          description?: string | null
           id?: string
           name?: string | null
           starts_at?: string | null
-          stats?: string[] | null
         }
         Relationships: []
       }
@@ -170,6 +140,45 @@ export type Database = {
           max_members?: number | null
           name?: string
           password?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      player_event_stats: {
+        Row: {
+          assists: number | null
+          created_at: string
+          event_id: string
+          goals: number | null
+          id: string
+          player_id: number
+          price: number
+          score: number | null
+          total_stats: number | null
+          updated_at: string
+        }
+        Insert: {
+          assists?: number | null
+          created_at?: string
+          event_id: string
+          goals?: number | null
+          id?: string
+          player_id: number
+          price?: number
+          score?: number | null
+          total_stats?: number | null
+          updated_at?: string
+        }
+        Update: {
+          assists?: number | null
+          created_at?: string
+          event_id?: string
+          goals?: number | null
+          id?: string
+          player_id?: number
+          price?: number
+          score?: number | null
+          total_stats?: number | null
           updated_at?: string
         }
         Relationships: []
