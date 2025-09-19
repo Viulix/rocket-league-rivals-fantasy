@@ -44,6 +44,7 @@ export type Database = {
       fantasy_teams: {
         Row: {
           created_at: string
+          event_id: string | null
           id: string
           league_id: string | null
           selected_players: Json
@@ -54,6 +55,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          event_id?: string | null
           id?: string
           league_id?: string | null
           selected_players?: Json
@@ -64,6 +66,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          event_id?: string | null
           id?: string
           league_id?: string | null
           selected_players?: Json
@@ -73,6 +76,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fantasy_teams_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fantasy_teams_league_id_fkey"
             columns: ["league_id"]

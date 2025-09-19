@@ -11,7 +11,7 @@ import Navigation from "@/components/Navigation";
 import LeagueManagement from "@/components/LeagueManagement";
 import AdminEventManager from "@/components/AdminEventManager";
 import { User } from "@supabase/supabase-js";
-import { Download } from "lucide-react";
+
 
 // Player and stats interfaces
 interface Player {
@@ -51,7 +51,7 @@ const Fantasy = () => {
 	const [teamName, setTeamName] = useState<string>("My Team");
 	const [events, setEvents] = useState<any[]>([]);
 	const [currentEvent, setCurrentEvent] = useState<string>("");
-	const [importing, setImporting] = useState(false);
+	
 	const navigate = useNavigate();
 
 	const totalCost = selectedPlayers.reduce((sum, player) => sum + player.price, 0);
@@ -131,13 +131,14 @@ const Fantasy = () => {
 		}
 	};
 
-	const loadTeam = async (userId: string, leagueId: string) => {
+	const loadTeam = async (userId: string, leagueId: string, eventId: string) => {
 		try {
 			const { data, error } = await supabase
 				.from('fantasy_teams')
 				.select('*')
 				.eq('user_id', userId)
 				.eq('league_id', leagueId)
+				.eq('event_id', eventId)
 				.maybeSingle();
 
 			if (error && error.code !== 'PGRST116') {
@@ -157,9 +158,9 @@ const Fantasy = () => {
 		}
 	};
 
-	// Auto-save when selectedPlayers, teamName, or currentLeague changes
+	// Auto-save when selectedPlayers, teamName, currentLeague, or currentEvent changes
 	useEffect(() => {
-		if (user && currentLeague && currentLeague !== '' && !loading) {
+		if (user && currentLeague && currentLeague !== '' && currentEvent && currentEvent !== '' && !loading) {
 			const saveTeamAuto = async () => {
 				try {
 					const { error } = await supabase
@@ -167,11 +168,12 @@ const Fantasy = () => {
 						.upsert({
 							user_id: user.id,
 							league_id: currentLeague,
+							event_id: currentEvent,
 							team_name: teamName,
 							selected_players: selectedPlayers as any,
 							total_cost: totalCost,
 						}, {
-							onConflict: 'user_id,league_id'
+							onConflict: 'user_id,league_id,event_id'
 						});
 
 					if (error) {
@@ -186,18 +188,14 @@ const Fantasy = () => {
 			const timeoutId = setTimeout(saveTeamAuto, 500);
 			return () => clearTimeout(timeoutId);
 		}
-	}, [selectedPlayers, teamName, currentLeague, user, totalCost, loading]);
+	}, [selectedPlayers, teamName, currentLeague, currentEvent, user, totalCost, loading]);
 
 	const handleLeagueChange = (leagueId: string) => {
 		if (leagueId !== currentLeague) {
 			setCurrentLeague(leagueId);
-			if (user && leagueId) {
-				loadTeam(user.id, leagueId);
-			} else {
-				// Clear team if no league selected
-				setSelectedPlayers([]);
-				setTeamName('My Team');
-			}
+			// Clear team when league changes - user needs to select event to load team
+			setSelectedPlayers([]);
+			setTeamName('My Team');
 		}
 	};
 
@@ -205,8 +203,14 @@ const Fantasy = () => {
 		setCurrentEvent(eventId);
 		if (eventId) {
 			await loadPlayersForEvent(eventId);
+			// Load team for this specific event and league
+			if (user && currentLeague) {
+				loadTeam(user.id, currentLeague, eventId);
+			}
 		} else {
 			setAvailablePlayers([]);
+			setSelectedPlayers([]);
+			setTeamName('My Team');
 		}
 	};
 
@@ -296,79 +300,6 @@ const Fantasy = () => {
 		);
 	};
 
-	const importPlayersFromBallchasing = async () => {
-		if (!user) return;
-
-		setImporting(true);
-		try {
-			console.log('Starting import from ballchasing...');
-			const response = await supabase.functions.invoke('fetch-ballchasing-players', {
-				body: {
-					groupId: 'regional-1-x1z5gypjs2',
-					eventName: 'EU Regional 1'
-				}
-			});
-
-			console.log('Function response:', response);
-
-			if (response.error) {
-				console.error('Function error:', response.error);
-				throw new Error(response.error.message || 'Unknown function error');
-			}
-
-			if (!response.data) {
-				throw new Error('No data returned from function');
-			}
-
-			console.log('Import successful:', response.data);
-
-			toast({
-				title: "Success!",
-				description: response.data.message || "Players imported successfully",
-			});
-
-			// Reload events to show the new event
-			loadEvents();
-		} catch (error) {
-			console.error('Import error:', error);
-			toast({
-				title: "Import Failed",
-				description: error instanceof Error ? error.message : "Failed to import players from ballchasing",
-				variant: "destructive"
-			});
-		} finally {
-			setImporting(false);
-		}
-	};
-
-	const testImport = async () => {
-		setImporting(true);
-		try {
-			console.log('Testing import functionality...');
-			const response = await supabase.functions.invoke('test-import');
-
-			console.log('Test response:', response);
-
-			if (response.error) {
-				console.error('Test error:', response.error);
-				throw new Error(response.error.message || 'Test failed');
-			}
-
-			toast({
-				title: "Test Successful!",
-				description: `Found ${response.data.ballchasingPlayers} players. All systems working.`,
-			});
-		} catch (error) {
-			console.error('Test error:', error);
-			toast({
-				title: "Test Failed",
-				description: error instanceof Error ? error.message : "Test failed",
-				variant: "destructive"
-			});
-		} finally {
-			setImporting(false);
-		}
-	};
 
 	// Load events using direct API call to avoid TypeScript issues
 	const loadEvents = async () => {
@@ -429,30 +360,7 @@ const Fantasy = () => {
 						<div className="md:col-span-2">
 							<Card className="bg-gradient-card border-border shadow-card animate-scale-in hover:shadow-glow transition-all duration-300">
 								<CardHeader className="pb-3">
-									<div className="flex items-center justify-between">
-										<CardTitle className="text-lg text-foreground">Event Selection</CardTitle>
-										<div className="flex gap-2">
-											<Button
-												onClick={testImport}
-												disabled={importing || !user}
-												variant="secondary"
-												size="sm"
-												className="flex items-center gap-2"
-											>
-												Test Import
-											</Button>
-											<Button
-												onClick={importPlayersFromBallchasing}
-												disabled={importing || !user}
-												variant="outline"
-												size="sm"
-												className="flex items-center gap-2"
-											>
-												<Download className="h-4 w-4" />
-												{importing ? "Importing..." : "Import EU Regional 1"}
-											</Button>
-										</div>
-									</div>
+									<CardTitle className="text-lg text-foreground">Event Selection</CardTitle>
 								</CardHeader>
 								<CardContent>
 									<Select value={currentEvent} onValueChange={handleEventChange}>
@@ -510,7 +418,7 @@ const Fantasy = () => {
 										placeholder="Enter your team name"
 										className="bg-input border-border"
 										maxLength={50}
-										disabled={!currentLeague}
+										disabled={!currentLeague || !currentEvent}
 									/>
 								</CardContent>
 							</Card>
@@ -547,7 +455,7 @@ const Fantasy = () => {
 								<CardContent className="space-y-3">
 									{selectedPlayers.length === 0 ? (
 										<p className="text-muted-foreground text-center py-8">
-											{!currentLeague ? 'Please select a league first' : 'No players selected yet'}
+											{!currentLeague ? 'Please select a league first' : !currentEvent ? 'Please select an event first' : 'No players selected yet'}
 										</p>
 									) : (
 										selectedPlayers.map((player) => (
