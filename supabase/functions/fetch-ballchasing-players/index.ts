@@ -119,10 +119,14 @@ serve(async (req) => {
         console.log(`Player created: ${playerId}`)
       }
       
-      // Generate random stats for now (goals + assists + score)
-      const goals = Math.floor(Math.random() * 5)
-      const assists = Math.floor(Math.random() * 4)
-      const score = Math.floor(Math.random() * 500) + 200
+      // Use actual stats from ballchasing API (convert to averages)
+      const stats = player.cumulative || {}
+      const gamesPlayed = stats.games || 1 // Avoid division by zero
+      
+      const goals = (stats.core?.goals || 0) / gamesPlayed
+      const assists = (stats.core?.assists || 0) / gamesPlayed  
+      const saves = (stats.core?.saves || 0) / gamesPlayed
+      const score = (stats.core?.score || 0) / gamesPlayed
       
       // Create player_event_stats entry for this player in this event
       const { error: statsError } = await supabase
@@ -133,6 +137,7 @@ serve(async (req) => {
           price: 1200, // Default price as requested
           goals: goals,
           assists: assists,
+          saves: saves,
           score: score
         }, {
           onConflict: 'player_id,event_id'
@@ -142,7 +147,7 @@ serve(async (req) => {
         console.error('Error creating player event stats:', statsError)
         // Don't throw here, just log the error
       } else {
-        console.log(`Stats created for player ${playerId}: ${goals}G, ${assists}A, ${score}S`)
+        console.log(`Stats created for player ${playerId}: ${goals.toFixed(2)}G, ${assists.toFixed(2)}A, ${saves.toFixed(2)}S, ${score.toFixed(0)}Sc`)
       }
     }
 

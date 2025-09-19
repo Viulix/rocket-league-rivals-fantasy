@@ -27,9 +27,17 @@ interface EventStats {
 	price: number;
 }
 
+interface PlayerStats {
+	goals: number;
+	assists: number;
+	saves: number;
+	score: number;
+	total: number;
+}
+
 interface PlayerWithStats extends Player {
 	price: number;
-	stats: any;
+	stats: PlayerStats;
 }
 
 const Fantasy = () => {
@@ -220,14 +228,28 @@ const Fantasy = () => {
 
 	const loadPlayersForEvent = async (eventId: string) => {
 		try {
-			// Fetch players and their stats for the selected event using the new player_event_stats table
-			const statsResponse = await fetch(`https://tliuublslpgztrxqalcw.supabase.co/rest/v1/player_event_stats?select=*,players(id,name,platform_id)&event_id=eq.${eventId}`, {
-				headers: {
-					'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE',
-					'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE'
-				}
-			});
-			const playerEventStats = await statsResponse.json();
+			// Fetch players and their stats for the selected event using Supabase client
+			const { data: playerEventStats, error } = await supabase
+				.from('player_event_stats')
+				.select(`
+					*,
+					players (
+						id,
+						name,
+						platform_id
+					)
+				`)
+				.eq('event_id', eventId);
+
+			if (error) {
+				console.error('Error fetching player stats:', error);
+				toast({
+					title: "Error",
+					description: "Failed to load players for this event.",
+					variant: "destructive",
+				});
+				return;
+			}
 
 			console.log('Player event stats:', playerEventStats);
 
@@ -239,10 +261,11 @@ const Fantasy = () => {
 					platform_id: stat.players?.platform_id || 'Unknown',
 					price: stat.price || 1200,
 					stats: {
-						goals: stat.goals,
-						assists: stat.assists,
-						score: stat.score,
-						total: stat.total_stats
+						goals: parseFloat(stat.goals) || 0,
+						assists: parseFloat(stat.assists) || 0,
+						saves: parseFloat(stat.saves) || 0,
+						score: parseFloat(stat.score) || 0,
+						total: parseFloat(stat.total_stats) || 0
 					}
 				};
 			}) || [];
@@ -538,11 +561,7 @@ const Fantasy = () => {
 														{player.platform_id}
 													</div>
 													<div className="text-xs text-muted-foreground mt-1">
-														{player.stats && typeof player.stats === 'object' && 
-															Object.entries(player.stats).map(([key, value]) => 
-																`${key}: ${value}`
-															).join(' | ')
-														}
+														G: {player.stats.goals.toFixed(1)} | A: {player.stats.assists.toFixed(1)} | S: {player.stats.saves.toFixed(1)} | Sc: {player.stats.score.toFixed(0)}
 													</div>
 												</div>
 												<div className="text-right">
@@ -614,11 +633,7 @@ const Fantasy = () => {
 																	{player.platform_id}
 																</p>
 																<div className="text-xs text-muted-foreground mt-1">
-																	{player.stats && typeof player.stats === 'object' && 
-																		Object.entries(player.stats).map(([key, value]) => 
-																			`${key}: ${value}`
-																		).join(' | ')
-																	}
+																	G: {player.stats.goals.toFixed(1)} | A: {player.stats.assists.toFixed(1)} | S: {player.stats.saves.toFixed(1)} | Sc: {player.stats.score.toFixed(0)}
 																</div>
 															</div>
 														</div>

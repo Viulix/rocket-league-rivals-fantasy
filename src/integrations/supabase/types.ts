@@ -153,6 +153,7 @@ export type Database = {
           id: string
           player_id: number
           price: number
+          saves: number | null
           score: number | null
           total_stats: number | null
           updated_at: string
@@ -165,6 +166,7 @@ export type Database = {
           id?: string
           player_id: number
           price?: number
+          saves?: number | null
           score?: number | null
           total_stats?: number | null
           updated_at?: string
@@ -177,6 +179,7 @@ export type Database = {
           id?: string
           player_id?: number
           price?: number
+          saves?: number | null
           score?: number | null
           total_stats?: number | null
           updated_at?: string
