@@ -183,7 +183,8 @@ const Fantasy = () => {
 							total_cost: totalCost,
 						}, {
 							onConflict: 'user_id,league_id,event_id'
-						});
+						})
+						.select();
 
 					if (error) {
 						console.error('Auto-save error:', error);
