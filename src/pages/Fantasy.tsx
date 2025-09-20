@@ -163,7 +163,16 @@ const Fantasy = () => {
 		if (user && currentLeague && currentLeague !== '' && currentEvent && currentEvent !== '' && !loading) {
 			const saveTeamAuto = async () => {
 				try {
-					const { error } = await supabase
+					console.log('Auto-save attempt:', {
+						user_id: user.id,
+						league_id: currentLeague,
+						event_id: currentEvent,
+						team_name: teamName,
+						selected_players: selectedPlayers,
+						total_cost: totalCost
+					});
+
+					const { data, error } = await supabase
 						.from('fantasy_teams')
 						.upsert({
 							user_id: user.id,
@@ -178,6 +187,8 @@ const Fantasy = () => {
 
 					if (error) {
 						console.error('Auto-save error:', error);
+					} else {
+						console.log('Auto-save success:', data);
 					}
 				} catch (error) {
 					console.error('Auto-save error:', error);
