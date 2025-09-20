@@ -133,6 +133,8 @@ const Fantasy = () => {
 
 	const loadTeam = async (userId: string, leagueId: string, eventId: string) => {
 		try {
+			console.log('Loading team for:', { userId, leagueId, eventId });
+			
 			const { data, error } = await supabase
 				.from('fantasy_teams')
 				.select('*')
@@ -146,10 +148,17 @@ const Fantasy = () => {
 				return;
 			}
 
+			console.log('Team data loaded:', data);
+
 			if (data) {
+				console.log('Setting team data:', { 
+					players: data.selected_players, 
+					teamName: data.team_name 
+				});
 				setSelectedPlayers((data.selected_players as unknown) as PlayerWithStats[]);
 				setTeamName(data.team_name || 'My Team');
 			} else {
+				console.log('No team data found, resetting to defaults');
 				setSelectedPlayers([]);
 				setTeamName('My Team');
 			}
@@ -202,24 +211,39 @@ const Fantasy = () => {
 		}
 	}, [selectedPlayers, teamName, currentLeague, currentEvent, user, totalCost, loading]);
 
-	const handleLeagueChange = (leagueId: string) => {
+	const handleLeagueChange = async (leagueId: string) => {
 		if (leagueId !== currentLeague) {
+			console.log('League changed from', currentLeague, 'to', leagueId);
 			setCurrentLeague(leagueId);
-			// Clear team when league changes - user needs to select event to load team
-			setSelectedPlayers([]);
-			setTeamName('My Team');
+			
+			// If we have an event selected, load the team for the new league
+			if (currentEvent && user) {
+				console.log('Loading team for new league:', { userId: user.id, leagueId, eventId: currentEvent });
+				await loadTeam(user.id, leagueId, currentEvent);
+			} else {
+				// Clear team when league changes and no event selected
+				console.log('Clearing team - no event selected');
+				setSelectedPlayers([]);
+				setTeamName('My Team');
+			}
 		}
 	};
 
 	const handleEventChange = async (eventId: string) => {
+		console.log('Event changed to:', eventId);
 		setCurrentEvent(eventId);
+		
 		if (eventId) {
 			await loadPlayersForEvent(eventId);
 			// Load team for this specific event and league
 			if (user && currentLeague) {
-				loadTeam(user.id, currentLeague, eventId);
+				console.log('Loading team for event change:', { userId: user.id, leagueId: currentLeague, eventId });
+				await loadTeam(user.id, currentLeague, eventId);
+			} else {
+				console.log('Cannot load team - missing user or league:', { user: !!user, currentLeague });
 			}
 		} else {
+			console.log('Event cleared - resetting data');
 			setAvailablePlayers([]);
 			setSelectedPlayers([]);
 			setTeamName('My Team');
