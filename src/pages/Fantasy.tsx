@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast, toast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
 import LeagueManagement from "@/components/LeagueManagement";
-import AdminEventManager from "@/components/AdminEventManager";
+
 import { User } from "@supabase/supabase-js";
 
 
@@ -391,33 +391,27 @@ const Fantasy = () => {
 						</p>
 					</div>
 
-					{/* Event Selection and Admin Panel */}
-					<div className="grid md:grid-cols-3 gap-6 mb-6">
-						<div className="md:col-span-2">
-							<Card className="bg-gradient-card border-border shadow-card animate-scale-in hover:shadow-glow transition-all duration-300">
-								<CardHeader className="pb-3">
-									<CardTitle className="text-lg text-foreground">Event Selection</CardTitle>
-								</CardHeader>
-								<CardContent>
-									<Select value={currentEvent} onValueChange={handleEventChange}>
-										<SelectTrigger className="bg-input border-border">
-											<SelectValue placeholder="Select an event to filter players" />
-										</SelectTrigger>
-										<SelectContent>
-											{events.map(event => (
-												<SelectItem key={event.id} value={event.id}>
-													{event.name}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
-								</CardContent>
-							</Card>
-						</div>
-						
-						<div className="md:col-span-1">
-							<AdminEventManager onEventAdded={loadEvents} />
-						</div>
+					{/* Event Selection */}
+					<div className="mb-6">
+						<Card className="bg-gradient-card border-border shadow-card animate-scale-in hover:shadow-glow transition-all duration-300">
+							<CardHeader className="pb-3">
+								<CardTitle className="text-lg text-foreground">Event Selection</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<Select value={currentEvent} onValueChange={handleEventChange}>
+									<SelectTrigger className="bg-input border-border">
+										<SelectValue placeholder="Select an event to filter players" />
+									</SelectTrigger>
+									<SelectContent>
+										{events.map(event => (
+											<SelectItem key={event.id} value={event.id}>
+												{event.name}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</CardContent>
+						</Card>
 					</div>
 
 					{/* League and Team Settings */}

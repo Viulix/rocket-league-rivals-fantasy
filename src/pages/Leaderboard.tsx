@@ -56,23 +56,21 @@ const TeamModal = ({ team, isOpen, onClose }: TeamModalProps) => {
         </DialogHeader>
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {team.selected_players.map((player, index) => {
-            const mockPlayer = mockPlayers.find(p => p.id === player.id);
-            if (!mockPlayer) return null;
-            
+            // Use the player data directly since it should have all the information we need
             return (
-              <div key={player.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+              <div key={player.id || index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                 <div className="flex-1">
-                  <div className="font-medium text-foreground">{mockPlayer.name}</div>
+                  <div className="font-medium text-foreground">{player.name || 'Unknown Player'}</div>
                   <div className="text-xs text-muted-foreground">
-                    {mockPlayer.team} • {mockPlayer.position}
+                    ID: {player.id || 'N/A'}
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
-                    G: {mockPlayer.goals} | A: {mockPlayer.assists} | S: {mockPlayer.saves} | GG: {mockPlayer.goldenGoals}
+                    G: {player.stats?.goals || 0} | A: {player.stats?.assists || 0} | S: {player.stats?.saves || 0} | Score: {player.stats?.score || 0}
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-primary">${mockPlayer.price.toLocaleString()}</div>
-                  <div className="text-xs text-muted-foreground">{mockPlayer.score} pts</div>
+                  <div className="font-bold text-primary">${(player.price || 1200).toLocaleString()}</div>
+                  <div className="text-xs text-muted-foreground">{player.stats?.total || 0} pts</div>
                 </div>
               </div>
             );

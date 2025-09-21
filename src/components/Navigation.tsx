@@ -212,6 +212,13 @@ const Navigation = () => {
                    </Button>
                  </Link>
                  
+                 <Link to="/profile">
+                   <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:scale-105 transition-all duration-200">
+                     <Settings className="h-4 w-4" />
+                      Profile
+                   </Button>
+                 </Link>
+                 
                  <Button
                    variant="ghost"
                    size="sm"
