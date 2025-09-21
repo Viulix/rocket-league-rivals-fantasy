@@ -262,6 +262,11 @@ const Profile = () => {
                                 Starts: {new Date(event.starts_at).toLocaleDateString()}
                               </div>
                             )}
+                            {event.ends_at && (
+                              <div className="text-xs text-muted-foreground">
+                                Ends: {new Date(event.ends_at).toLocaleDateString()}
+                              </div>
+                            )}
                           </div>
                           <Badge variant="outline">Active</Badge>
                         </div>

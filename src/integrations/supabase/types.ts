@@ -19,6 +19,7 @@ export type Database = {
           ballchasing_group_id: string | null
           created_at: string
           description: string | null
+          ends_at: string | null
           id: string
           name: string | null
           starts_at: string | null
@@ -27,6 +28,7 @@ export type Database = {
           ballchasing_group_id?: string | null
           created_at?: string
           description?: string | null
+          ends_at?: string | null
           id?: string
           name?: string | null
           starts_at?: string | null
@@ -35,6 +37,7 @@ export type Database = {
           ballchasing_group_id?: string | null
           created_at?: string
           description?: string | null
+          ends_at?: string | null
           id?: string
           name?: string | null
           starts_at?: string | null

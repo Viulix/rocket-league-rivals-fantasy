@@ -3,9 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface AdminEventManagerProps {
   onEventAdded?: () => void;
@@ -14,6 +18,8 @@ interface AdminEventManagerProps {
 export default function AdminEventManager({ onEventAdded }: AdminEventManagerProps) {
   const [eventName, setEventName] = useState("");
   const [ballchasingLink, setBallchasingLink] = useState("");
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
   const [isLoading, setIsLoading] = useState(false);
 
   const extractGroupId = (link: string) => {
@@ -30,6 +36,24 @@ export default function AdminEventManager({ onEventAdded }: AdminEventManagerPro
       toast({
         title: "Error",
         description: "Please provide both event name and ballchasing group link",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!startDate || !endDate) {
+      toast({
+        title: "Error",
+        description: "Please provide both start and end dates",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (startDate > endDate) {
+      toast({
+        title: "Error",
+        description: "Start date must be before end date",
         variant: "destructive",
       });
       return;
@@ -53,7 +77,9 @@ export default function AdminEventManager({ onEventAdded }: AdminEventManagerPro
       const { data, error } = await supabase.functions.invoke('fetch-ballchasing-players', {
         body: {
           groupId: groupId,
-          eventName: eventName.trim()
+          eventName: eventName.trim(),
+          startsAt: startDate.toISOString().split('T')[0],
+          endsAt: endDate.toISOString().split('T')[0]
         }
       });
 
@@ -71,6 +97,8 @@ export default function AdminEventManager({ onEventAdded }: AdminEventManagerPro
         });
         setEventName("");
         setBallchasingLink("");
+        setStartDate(undefined);
+        setEndDate(undefined);
         // Trigger callback to refresh events list
         onEventAdded?.();
       } else {
@@ -118,6 +146,64 @@ export default function AdminEventManager({ onEventAdded }: AdminEventManagerPro
               placeholder="https://ballchasing.com/group/world-championship-g0fibe4833"
               disabled={isLoading}
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Start Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !startDate && "text-muted-foreground"
+                    )}
+                    disabled={isLoading}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, "PPP") : <span>Pick start date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label>End Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !endDate && "text-muted-foreground"
+                    )}
+                    disabled={isLoading}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, "PPP") : <span>Pick end date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
 
           <Button type="submit" disabled={isLoading} className="w-full">

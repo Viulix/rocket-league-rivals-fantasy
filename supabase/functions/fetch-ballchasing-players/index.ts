@@ -12,8 +12,8 @@ serve(async (req) => {
 
   try {
     console.log('Starting ballchasing import...')
-    const { groupId, eventName } = await req.json()
-    console.log('Import request:', { groupId, eventName })
+    const { groupId, eventName, startsAt, endsAt } = await req.json()
+    console.log('Import request:', { groupId, eventName, startsAt, endsAt })
     
     // Get the ballchasing API key from Supabase secrets
     const ballchasingApiKey = Deno.env.get('BALLCHASING_API_KEY')
@@ -66,7 +66,9 @@ serve(async (req) => {
         .from('events')
         .insert({
           name: eventName,
-          starts_at: new Date().toISOString().split('T')[0]
+          starts_at: startsAt,
+          ends_at: endsAt,
+          ballchasing_group_id: groupId
         })
         .select('id')
         .single()
