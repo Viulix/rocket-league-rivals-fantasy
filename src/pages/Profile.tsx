@@ -20,9 +20,8 @@ const Profile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check if user is admin - for demo purposes, you can replace this with your actual user ID
-  // To find your user ID, look at the "User ID" section in your profile
-  const isAdmin = user?.id === "your-user-id-here"; // Replace with your actual user ID
+  // Check if user is admin by email
+  const isAdmin = user?.email === "niclasraffl@gmail.com";
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(

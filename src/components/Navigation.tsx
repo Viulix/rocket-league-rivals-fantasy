@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/providers/ThemeProvider";
 import { User } from "@supabase/supabase-js";
-import { Home, User as UserIcon, LogOut, Settings, Sun, Moon } from "lucide-react";
+import { Home, User as UserIcon, LogOut, Settings, Sun, Moon, UserCog } from "lucide-react";
 
 const Navigation = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -211,10 +211,9 @@ const Navigation = () => {
                       Global League
                    </Button>
                  </Link>
-                 
                  <Link to="/profile">
                    <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:scale-105 transition-all duration-200">
-                     <Settings className="h-4 w-4" />
+                     <UserCog className="h-4 w-4" />
                       Profile
                    </Button>
                  </Link>
@@ -229,13 +228,13 @@ const Navigation = () => {
                    {theme === "dark" ? "Light" : "Dark"}
                  </Button>
                  
-                 <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:scale-105 transition-all duration-200">
-                        <Settings className="h-4 w-4" />
-                        Profile
-                      </Button>
-                    </DialogTrigger>
+                  <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+                     <DialogTrigger asChild>
+                       <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:scale-105 transition-all duration-200">
+                         <Settings className="h-4 w-4" />
+                         Settings
+                       </Button>
+                     </DialogTrigger>
                    <DialogContent className="sm:max-w-md">
                      <DialogHeader>
                        <DialogTitle>Profile Settings</DialogTitle>
