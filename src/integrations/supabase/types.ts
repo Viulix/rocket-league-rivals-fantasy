@@ -161,6 +161,7 @@ export type Database = {
         Row: {
           assists: number | null
           created_at: string
+          demos: number | null
           event_id: string
           goals: number | null
           id: string
@@ -174,6 +175,7 @@ export type Database = {
         Insert: {
           assists?: number | null
           created_at?: string
+          demos?: number | null
           event_id: string
           goals?: number | null
           id?: string
@@ -187,6 +189,7 @@ export type Database = {
         Update: {
           assists?: number | null
           created_at?: string
+          demos?: number | null
           event_id?: string
           goals?: number | null
           id?: string

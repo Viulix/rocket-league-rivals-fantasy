@@ -129,6 +129,7 @@ serve(async (req) => {
       const assists = (stats.core?.assists || 0) / gamesPlayed  
       const saves = (stats.core?.saves || 0) / gamesPlayed
       const score = (stats.core?.score || 0) / gamesPlayed
+      const demos = (stats.boost?.demos_inflicted || 0) / gamesPlayed
       
       // Create player_event_stats entry for this player in this event
       const { error: statsError } = await supabase
@@ -140,7 +141,8 @@ serve(async (req) => {
           goals: goals,
           assists: assists,
           saves: saves,
-          score: score
+          score: score,
+          demos: demos
         }, {
           onConflict: 'player_id,event_id'
         })
@@ -149,7 +151,7 @@ serve(async (req) => {
         console.error('Error creating player event stats:', statsError)
         // Don't throw here, just log the error
       } else {
-        console.log(`Stats created for player ${playerId}: ${goals.toFixed(2)}G, ${assists.toFixed(2)}A, ${saves.toFixed(2)}S, ${score.toFixed(0)}Sc`)
+        console.log(`Stats created for player ${playerId}: ${goals.toFixed(2)}G, ${assists.toFixed(2)}A, ${saves.toFixed(2)}S, ${score.toFixed(0)}Sc, ${demos.toFixed(2)}D`)
       }
     }
 

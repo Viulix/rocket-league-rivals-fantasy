@@ -32,12 +32,14 @@ interface PlayerStats {
 	assists: number;
 	saves: number;
 	score: number;
+	demos: number;
 	total: number;
 }
 
 interface PlayerWithStats extends Player {
 	price: number;
 	stats: PlayerStats;
+	fantasyScore: number;
 }
 
 const Fantasy = () => {
@@ -51,8 +53,23 @@ const Fantasy = () => {
 	const [teamName, setTeamName] = useState<string>("My Team");
 	const [events, setEvents] = useState<any[]>([]);
 	const [currentEvent, setCurrentEvent] = useState<string>("");
+	const [captainId, setCaptainId] = useState<string>("");
 	
 	const navigate = useNavigate();
+
+	// Calculate fantasy score: F = Goals x 0.95 + Assists x 0.75 + 0.48 x Saves + 17 x Demos + 0.7 x Score
+	const calculateFantasyScore = (stats: PlayerStats, isCaptain: boolean = false) => {
+		const baseScore = stats.goals * 0.95 + stats.assists * 0.75 + stats.saves * 0.48 + stats.demos * 17 + stats.score * 0.7;
+		return isCaptain ? baseScore * 1.25 : baseScore;
+	};
+
+	// Calculate total team fantasy score
+	const getTeamFantasyScore = () => {
+		return selectedPlayers.reduce((sum, player) => {
+			const isCaptain = player.id === captainId;
+			return sum + calculateFantasyScore(player.stats, isCaptain);
+		}, 0);
+	};
 
 	const totalCost = selectedPlayers.reduce((sum, player) => sum + player.price, 0);
 	const remainingBudget = budget - totalCost;
@@ -250,17 +267,17 @@ const Fantasy = () => {
 		}
 	};
 
-	// Calculate team rating based on total value
+	// Calculate team rating based on fantasy score
 	const getTeamRating = () => {
 		if (selectedPlayers.length === 0) return { grade: 'F', color: 'text-muted-foreground' };
 
-		const totalValue = selectedPlayers.reduce((sum, player) => sum + player.price, 0);
-		const avgValue = totalValue / selectedPlayers.length;
+		const totalFantasyScore = getTeamFantasyScore();
+		const avgFantasyScore = totalFantasyScore / selectedPlayers.length;
 
-		if (avgValue >= 2000) return { grade: 'S', color: 'text-green-400' };
-		if (avgValue >= 1500) return { grade: 'A', color: 'text-blue-400' };
-		if (avgValue >= 1000) return { grade: 'B', color: 'text-yellow-400' };
-		if (avgValue >= 500) return { grade: 'C', color: 'text-orange-400' };
+		if (avgFantasyScore >= 50) return { grade: 'S', color: 'text-green-400' };
+		if (avgFantasyScore >= 40) return { grade: 'A', color: 'text-blue-400' };
+		if (avgFantasyScore >= 30) return { grade: 'B', color: 'text-yellow-400' };
+		if (avgFantasyScore >= 20) return { grade: 'C', color: 'text-orange-400' };
 		return { grade: 'D', color: 'text-red-400' };
 	};
 
@@ -295,18 +312,22 @@ const Fantasy = () => {
 
 			// Transform the data to match our PlayerWithStats interface
 			const playersWithStats: PlayerWithStats[] = playerEventStats?.map((stat: any) => {
+				const stats = {
+					goals: parseFloat(stat.goals) || 0,
+					assists: parseFloat(stat.assists) || 0,
+					saves: parseFloat(stat.saves) || 0,
+					score: parseFloat(stat.score) || 0,
+					demos: parseFloat(stat.demos) || 0,
+					total: parseFloat(stat.total_stats) || 0
+				};
+				
 				return {
 					id: stat.player_id.toString(), // Convert bigint to string for UI
 					name: stat.players?.name || 'Unknown Player',
 					platform_id: stat.players?.platform_id || 'Unknown',
 					price: stat.price || 1200,
-					stats: {
-						goals: parseFloat(stat.goals) || 0,
-						assists: parseFloat(stat.assists) || 0,
-						saves: parseFloat(stat.saves) || 0,
-						score: parseFloat(stat.score) || 0,
-						total: parseFloat(stat.total_stats) || 0
-					}
+					stats: stats,
+					fantasyScore: calculateFantasyScore(stats)
 				};
 			}) || [];
 
@@ -328,6 +349,10 @@ const Fantasy = () => {
 
 	const removePlayer = (playerId: string) => {
 		setSelectedPlayers(selectedPlayers.filter(p => p.id !== playerId));
+		// If removing the captain, clear captain selection
+		if (captainId === playerId) {
+			setCaptainId("");
+		}
 	};
 
 	const getFilteredAvailablePlayers = () => {
@@ -480,6 +505,8 @@ const Fantasy = () => {
 									</CardTitle>
 									<CardDescription>
 										Budget: ${remainingBudget.toLocaleString()} / ${budget.toLocaleString()}
+										<br />
+										Fantasy Score: {getTeamFantasyScore().toFixed(1)}
 									</CardDescription>
 								</CardHeader>
 								<CardContent className="space-y-3">
@@ -488,33 +515,56 @@ const Fantasy = () => {
 											{!currentLeague ? 'Please select a league first' : !currentEvent ? 'Please select an event first' : 'No players selected yet'}
 										</p>
 									) : (
-										selectedPlayers.map((player) => (
-											<div
-												key={player.id}
-												className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-all duration-200"
-											>
-												<div className="flex-1">
-													<div className="font-medium text-foreground">{player.name}</div>
-													<div className="text-xs text-muted-foreground">
-														{player.platform_id}
+										selectedPlayers.map((player) => {
+											const isCaptain = player.id === captainId;
+											const fantasyScore = calculateFantasyScore(player.stats, isCaptain);
+											
+											return (
+												<div
+													key={player.id}
+													className={`flex items-center justify-between p-3 rounded-lg hover:bg-muted/80 transition-all duration-200 ${
+														isCaptain ? 'bg-primary/10 border border-primary/30' : 'bg-muted'
+													}`}
+												>
+													<div className="flex-1">
+														<div className="flex items-center gap-2">
+															<div className="font-medium text-foreground">{player.name}</div>
+															{isCaptain && <Badge variant="secondary" className="text-xs">Captain</Badge>}
+														</div>
+														<div className="text-xs text-muted-foreground">
+															{player.platform_id}
+														</div>
+														<div className="text-xs text-muted-foreground mt-1">
+															G: {player.stats.goals.toFixed(1)} | A: {player.stats.assists.toFixed(1)} | S: {player.stats.saves.toFixed(1)} | D: {player.stats.demos.toFixed(1)} | Sc: {player.stats.score.toFixed(0)}
+														</div>
+														<div className="text-xs font-medium text-primary mt-1">
+															Fantasy: {fantasyScore.toFixed(1)} {isCaptain && '(+25%)'}
+														</div>
 													</div>
-													<div className="text-xs text-muted-foreground mt-1">
-														G: {player.stats.goals.toFixed(1)} | A: {player.stats.assists.toFixed(1)} | S: {player.stats.saves.toFixed(1)} | Sc: {player.stats.score.toFixed(0)}
+													<div className="text-right">
+														<div className="font-bold text-primary">${player.price.toLocaleString()}</div>
+														<div className="flex gap-1 mt-1">
+															<Button
+																variant={isCaptain ? "default" : "outline"}
+																size="sm" 
+																onClick={() => setCaptainId(isCaptain ? "" : player.id)}
+																className="h-6 text-xs"
+															>
+																{isCaptain ? "Captain" : "Captain"}
+															</Button>
+															<Button
+																variant="outline"
+																size="sm"
+																onClick={() => removePlayer(player.id)}
+																className="h-6 text-xs"
+															>
+																Remove
+															</Button>
+														</div>
 													</div>
 												</div>
-												<div className="text-right">
-													<div className="font-bold text-primary">${player.price.toLocaleString()}</div>
-													<Button
-														variant="outline"
-														size="sm"
-														onClick={() => removePlayer(player.id)}
-														className="mt-1 h-6 text-xs"
-													>
-														Remove
-													</Button>
-												</div>
-											</div>
-										))
+											);
+										})
 									)}
 								</CardContent>
 							</Card>
@@ -571,7 +621,10 @@ const Fantasy = () => {
 																	{player.platform_id}
 																</p>
 																<div className="text-xs text-muted-foreground mt-1">
-																	G: {player.stats.goals.toFixed(1)} | A: {player.stats.assists.toFixed(1)} | S: {player.stats.saves.toFixed(1)} | Sc: {player.stats.score.toFixed(0)}
+																	G: {player.stats.goals.toFixed(1)} | A: {player.stats.assists.toFixed(1)} | S: {player.stats.saves.toFixed(1)} | D: {player.stats.demos.toFixed(1)} | Sc: {player.stats.score.toFixed(0)}
+																</div>
+																<div className="text-xs font-medium text-primary mt-1">
+																	Fantasy: {player.fantasyScore.toFixed(1)}
 																</div>
 															</div>
 														</div>
