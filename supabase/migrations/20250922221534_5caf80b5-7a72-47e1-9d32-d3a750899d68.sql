@@ -1,0 +1,4 @@
+-- Update events table to include time (TIMESTAMP WITH TIME ZONE instead of DATE)
+ALTER TABLE public.events 
+ALTER COLUMN starts_at TYPE TIMESTAMP WITH TIME ZONE,
+ALTER COLUMN ends_at TYPE TIMESTAMP WITH TIME ZONE;

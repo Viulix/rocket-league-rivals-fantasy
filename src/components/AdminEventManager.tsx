@@ -20,6 +20,8 @@ export default function AdminEventManager({ onEventAdded }: AdminEventManagerPro
   const [ballchasingLink, setBallchasingLink] = useState("");
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
+  const [startTime, setStartTime] = useState("10:00");
+  const [endTime, setEndTime] = useState("18:00");
   const [isLoading, setIsLoading] = useState(false);
 
   const extractGroupId = (link: string) => {
@@ -50,10 +52,20 @@ export default function AdminEventManager({ onEventAdded }: AdminEventManagerPro
       return;
     }
 
-    if (startDate > endDate) {
+    // Combine date and time
+    const [startHours, startMinutes] = startTime.split(':').map(Number);
+    const [endHours, endMinutes] = endTime.split(':').map(Number);
+    
+    const startDateTime = new Date(startDate);
+    startDateTime.setHours(startHours, startMinutes, 0, 0);
+    
+    const endDateTime = new Date(endDate);
+    endDateTime.setHours(endHours, endMinutes, 0, 0);
+
+    if (startDateTime >= endDateTime) {
       toast({
         title: "Error",
-        description: "Start date must be before end date",
+        description: "Start date/time must be before end date/time",
         variant: "destructive",
       });
       return;
@@ -78,8 +90,8 @@ export default function AdminEventManager({ onEventAdded }: AdminEventManagerPro
         body: {
           groupId: groupId,
           eventName: eventName.trim(),
-          startsAt: startDate.toISOString().split('T')[0],
-          endsAt: endDate.toISOString().split('T')[0]
+          startsAt: startDateTime.toISOString(),
+          endsAt: endDateTime.toISOString()
         }
       });
 
@@ -99,6 +111,8 @@ export default function AdminEventManager({ onEventAdded }: AdminEventManagerPro
         setBallchasingLink("");
         setStartDate(undefined);
         setEndDate(undefined);
+        setStartTime("10:00");
+        setEndTime("18:00");
         // Trigger callback to refresh events list
         onEventAdded?.();
       } else {
@@ -150,7 +164,7 @@ export default function AdminEventManager({ onEventAdded }: AdminEventManagerPro
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Start Date</Label>
+              <Label>Start Date & Time</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -175,10 +189,16 @@ export default function AdminEventManager({ onEventAdded }: AdminEventManagerPro
                   />
                 </PopoverContent>
               </Popover>
+              <Input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                disabled={isLoading}
+              />
             </div>
 
             <div className="space-y-2">
-              <Label>End Date</Label>
+              <Label>End Date & Time</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -203,6 +223,12 @@ export default function AdminEventManager({ onEventAdded }: AdminEventManagerPro
                   />
                 </PopoverContent>
               </Popover>
+              <Input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                disabled={isLoading}
+              />
             </div>
           </div>
 

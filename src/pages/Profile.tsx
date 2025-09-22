@@ -8,7 +8,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
 import AdminEventManager from "@/components/AdminEventManager";
+import EventEditor from "@/components/EventEditor";
+import EventPlayerManager from "@/components/EventPlayerManager";
 import { User } from "@supabase/supabase-js";
+import { Edit, Users, Calendar, Clock } from "lucide-react";
+import { format } from "date-fns";
 
 const Profile = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -17,6 +21,8 @@ const Profile = () => {
   const [displayName, setDisplayName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [events, setEvents] = useState<any[]>([]);
+  const [editingEvent, setEditingEvent] = useState<any | null>(null);
+  const [managingEventPlayers, setManagingEventPlayers] = useState<any | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -124,6 +130,20 @@ const Profile = () => {
     }
   };
 
+  const isEventStarted = (event: any) => {
+    if (!event.starts_at) return false;
+    return new Date(event.starts_at) <= new Date();
+  };
+
+  const formatDateTime = (dateTime: string) => {
+    if (!dateTime) return "Not set";
+    try {
+      return format(new Date(dateTime), "PPp");
+    } catch {
+      return "Invalid date";
+    }
+  };
+
   
 
   useEffect(() => {
@@ -140,6 +160,23 @@ const Profile = () => {
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Loading profile...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show event player manager
+  if (managingEventPlayers) {
+    return (
+      <div className="min-h-screen bg-background" style={{ fontFamily: "var(--font-family)" }}>
+        <Navigation />
+        <div className="p-4">
+          <div className="max-w-6xl mx-auto">
+            <EventPlayerManager 
+              event={managingEventPlayers} 
+              onBack={() => setManagingEventPlayers(null)} 
+            />
           </div>
         </div>
       </div>
@@ -243,36 +280,76 @@ const Profile = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <AdminEventManager onEventAdded={loadEvents} />
-                
-                {/* Event Management */}
-                {events.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Existing Events</h3>
-                    <div className="space-y-3">
-                      {events.map((event) => (
-                        <div key={event.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                          <div>
-                            <div className="font-medium text-foreground">{event.name}</div>
-                            <div className="text-xs text-muted-foreground">
-                              Created: {new Date(event.created_at).toLocaleDateString()}
+                {editingEvent ? (
+                  <EventEditor
+                    event={editingEvent}
+                    onCancel={() => setEditingEvent(null)}
+                    onSave={() => {
+                      setEditingEvent(null);
+                      loadEvents();
+                    }}
+                  />
+                ) : (
+                  <>
+                    <AdminEventManager onEventAdded={loadEvents} />
+                    
+                    {/* Event Management */}
+                    {events.length > 0 && (
+                      <div className="mt-6">
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Existing Events</h3>
+                        <div className="space-y-3">
+                          {events.map((event) => (
+                            <div key={event.id} className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                              <div className="flex-1">
+                                <div className="font-medium text-foreground flex items-center gap-2">
+                                  {event.name}
+                                  {isEventStarted(event) && (
+                                    <Badge variant="secondary">
+                                      <Clock className="h-3 w-3 mr-1" />
+                                      Started
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-1 space-y-1">
+                                  <div>Created: {new Date(event.created_at).toLocaleDateString()}</div>
+                                  {event.starts_at && (
+                                    <div className="flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      Starts: {formatDateTime(event.starts_at)}
+                                    </div>
+                                  )}
+                                  {event.ends_at && (
+                                    <div className="flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      Ends: {formatDateTime(event.ends_at)}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={() => setEditingEvent(event)}
+                                  variant="outline"
+                                  size="sm"
+                                >
+                                  <Edit className="h-4 w-4 mr-1" />
+                                  Edit
+                                </Button>
+                                <Button
+                                  onClick={() => setManagingEventPlayers(event)}
+                                  variant="outline"
+                                  size="sm"
+                                >
+                                  <Users className="h-4 w-4 mr-1" />
+                                  Players
+                                </Button>
+                              </div>
                             </div>
-                            {event.starts_at && (
-                              <div className="text-xs text-muted-foreground">
-                                Starts: {new Date(event.starts_at).toLocaleDateString()}
-                              </div>
-                            )}
-                            {event.ends_at && (
-                              <div className="text-xs text-muted-foreground">
-                                Ends: {new Date(event.ends_at).toLocaleDateString()}
-                              </div>
-                            )}
-                          </div>
-                          <Badge variant="outline">Active</Badge>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>

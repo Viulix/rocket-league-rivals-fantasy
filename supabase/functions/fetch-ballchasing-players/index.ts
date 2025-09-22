@@ -66,8 +66,8 @@ serve(async (req) => {
         .from('events')
         .insert({
           name: eventName,
-          starts_at: startsAt,
-          ends_at: endsAt,
+          starts_at: startsAt ? new Date(startsAt).toISOString() : null,
+          ends_at: endsAt ? new Date(endsAt).toISOString() : null,
           ballchasing_group_id: groupId
         })
         .select('id')
