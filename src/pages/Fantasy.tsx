@@ -519,6 +519,12 @@ const Fantasy = () => {
 										Budget: ${remainingBudget.toLocaleString()} / ${budget.toLocaleString()}
 										<br />
 										Fantasy Score: {getTeamFantasyScore().toFixed(1)}
+										{selectedPlayers.length > 0 && !captainId && (
+											<>
+												<br />
+												<span className="text-destructive font-medium">⚠️ Please select a captain!</span>
+											</>
+										)}
 									</CardDescription>
 								</CardHeader>
 								<CardContent className="space-y-3">
@@ -547,7 +553,7 @@ const Fantasy = () => {
 															{player.platform_id}
 														</div>
 														<div className="text-xs text-muted-foreground mt-1">
-															G: {player.stats.goals.toFixed(1)} | A: {player.stats.assists.toFixed(1)} | S: {player.stats.saves.toFixed(1)} | D: {player.stats.demos.toFixed(1)} | Sc: {player.stats.score.toFixed(0)}
+															G: {player.stats.goals.toFixed(2)} | A: {player.stats.assists.toFixed(2)} | S: {player.stats.saves.toFixed(2)} | D: {player.stats.demos.toFixed(2)} | Sc: {player.stats.score.toFixed(0)}
 														</div>
 														<div className="text-xs font-medium text-primary mt-1">
 															Fantasy: {fantasyScore.toFixed(1)} {isCaptain && '(+25%)'}
@@ -633,7 +639,7 @@ const Fantasy = () => {
 																	{player.platform_id}
 																</p>
 																<div className="text-xs text-muted-foreground mt-1">
-																	G: {player.stats.goals.toFixed(1)} | A: {player.stats.assists.toFixed(1)} | S: {player.stats.saves.toFixed(1)} | D: {player.stats.demos.toFixed(1)} | Sc: {player.stats.score.toFixed(0)}
+																	G: {player.stats.goals.toFixed(2)} | A: {player.stats.assists.toFixed(2)} | S: {player.stats.saves.toFixed(2)} | D: {player.stats.demos.toFixed(2)} | Sc: {player.stats.score.toFixed(0)}
 																</div>
 																<div className="text-xs font-medium text-primary mt-1">
 																	Fantasy: {player.fantasyScore.toFixed(1)}
