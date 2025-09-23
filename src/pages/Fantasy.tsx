@@ -397,6 +397,18 @@ const Fantasy = () => {
 		loadEvents();
 	}, []);
 
+	// Auto-refresh player data every 5 minutes
+	useEffect(() => {
+		if (!currentEvent) return;
+
+		const interval = setInterval(() => {
+			console.log('Auto-refreshing player data for event:', currentEvent);
+			loadPlayersForEvent(currentEvent);
+		}, 5 * 60 * 1000); // 5 minutes
+
+		return () => clearInterval(interval);
+	}, [currentEvent]);
+
 	if (loading) {
 		return (
 			<div className="min-h-screen bg-background font-roboto">
@@ -500,8 +512,92 @@ const Fantasy = () => {
 					</div>
 
 					<div className="grid lg:grid-cols-3 gap-6">
+						{/* Available Players */}
+						<div className="lg:col-span-2 order-2 lg:order-1">
+							<Card className="bg-gradient-card border-border shadow-card animate-scale-in hover:shadow-glow transition-all duration-300">
+								<CardHeader>
+									<CardTitle className="text-foreground" style={{ fontFamily: "var(--font-family)" }}>
+										Available Players
+									</CardTitle>
+									<CardDescription style={{ fontFamily: "var(--font-family)" }}>
+										{!currentLeague
+											? "Select a league first to start building your team"
+											: !currentEvent
+											? "Select an event to view available players"
+											: "Select players to add to your fantasy team"}
+									</CardDescription>
+								</CardHeader>
+								<CardContent>
+									{!currentLeague ? (
+										<div className="text-center py-12">
+											<p className="text-muted-foreground">Please select a league to view available players</p>
+										</div>
+									) : !currentEvent ? (
+										<div className="text-center py-12">
+											<p className="text-muted-foreground">Please select an event to view available players</p>
+										</div>
+									) : availablePlayers.length === 0 ? (
+										<div className="text-center py-12">
+											<p className="text-muted-foreground">No players available for this event</p>
+										</div>
+									) : (
+										<div className="max-h-[600px] overflow-y-auto pr-2">
+											<div className="space-y-3">
+												{getFilteredAvailablePlayers().map((player) => {
+													const canAfford = totalCost + player.price <= budget;
+													const hasSpace = selectedPlayers.length < maxPlayers;
+													const canAdd = canAfford && hasSpace;
+
+													return (
+														<div
+															key={player.id}
+															className={`p-4 rounded-lg border transition-all duration-300 ${
+																canAdd
+																	? 'border-border bg-card hover:border-primary/50 hover:shadow-md hover:-translate-y-1'
+																	: 'border-muted bg-muted/50 opacity-60'
+															}`}
+														>
+															<div className="flex items-start justify-between mb-2">
+																<div>
+																	<h3 className="font-bold text-foreground">{player.name}</h3>
+																	<p className="text-sm text-muted-foreground">
+																		{player.platform_id}
+																	</p>
+																	<div className="text-xs text-muted-foreground mt-1">
+																		G: {player.stats.goals.toFixed(2)} | A: {player.stats.assists.toFixed(2)} | S: {player.stats.saves.toFixed(2)} | D: {player.stats.demos.toFixed(2)} | Sc: {player.stats.score.toFixed(0)}
+																	</div>
+																	<div className="text-xs font-medium text-primary mt-1">
+																		Fantasy: {player.fantasyScore.toFixed(1)}
+																	</div>
+																</div>
+															</div>
+
+															<div className="flex items-center justify-between">
+																<span className="font-bold text-primary text-lg">
+																	${player.price.toLocaleString()}
+																</span>
+																<Button
+																	variant={canAdd ? "default" : "secondary"}
+																	size="sm"
+																	onClick={() => addPlayer(player)}
+																	disabled={!canAdd}
+																	className={canAdd ? "bg-gradient-primary text-primary-foreground hover:shadow-glow hover:scale-105 transition-all duration-200" : ""}
+																>
+																	{!hasSpace ? "Team Full" : !canAfford ? "Too Expensive" : "Add"}
+																</Button>
+															</div>
+														</div>
+													);
+												})}
+											</div>
+										</div>
+									)}
+								</CardContent>
+							</Card>
+						</div>
+
 						{/* Team Selection */}
-						<div className="lg:col-span-1">
+						<div className="lg:col-span-1 order-1 lg:order-2">
 							<Card className="bg-gradient-card border-border shadow-card animate-scale-in hover:shadow-glow transition-all duration-300 sticky top-4">
 								<CardHeader>
 									<CardTitle className="flex items-center justify-between text-foreground">
@@ -583,88 +679,6 @@ const Fantasy = () => {
 												</div>
 											);
 										})
-									)}
-								</CardContent>
-							</Card>
-						</div>
-
-						{/* Player Pool */}
-						<div className="lg:col-span-2">
-							<Card className="bg-gradient-card border-border shadow-card animate-scale-in hover:shadow-glow transition-all duration-300">
-								<CardHeader>
-									<CardTitle className="text-foreground" style={{ fontFamily: "var(--font-family)" }}>
-										Available Players
-									</CardTitle>
-									<CardDescription style={{ fontFamily: "var(--font-family)" }}>
-										{!currentLeague
-											? "Select a league first to start building your team"
-											: !currentEvent
-											? "Select an event to view available players"
-											: "Select players to add to your fantasy team"}
-									</CardDescription>
-								</CardHeader>
-								<CardContent>
-									{!currentLeague ? (
-										<div className="text-center py-12">
-											<p className="text-muted-foreground">Please select a league to view available players</p>
-										</div>
-									) : !currentEvent ? (
-										<div className="text-center py-12">
-											<p className="text-muted-foreground">Please select an event to view available players</p>
-										</div>
-									) : availablePlayers.length === 0 ? (
-										<div className="text-center py-12">
-											<p className="text-muted-foreground">No players available for this event</p>
-										</div>
-									) : (
-										<div className="grid md:grid-cols-2 gap-4">
-											{getFilteredAvailablePlayers().map((player) => {
-												const canAfford = totalCost + player.price <= budget;
-												const hasSpace = selectedPlayers.length < maxPlayers;
-												const canAdd = canAfford && hasSpace;
-
-												return (
-													<div
-														key={player.id}
-														className={`p-4 rounded-lg border transition-all duration-300 ${
-															canAdd
-																? 'border-border bg-card hover:border-primary/50 hover:shadow-md hover:-translate-y-1'
-																: 'border-muted bg-muted/50 opacity-60'
-														}`}
-													>
-														<div className="flex items-start justify-between mb-2">
-															<div>
-																<h3 className="font-bold text-foreground">{player.name}</h3>
-																<p className="text-sm text-muted-foreground">
-																	{player.platform_id}
-																</p>
-																<div className="text-xs text-muted-foreground mt-1">
-																	G: {player.stats.goals.toFixed(2)} | A: {player.stats.assists.toFixed(2)} | S: {player.stats.saves.toFixed(2)} | D: {player.stats.demos.toFixed(2)} | Sc: {player.stats.score.toFixed(0)}
-																</div>
-																<div className="text-xs font-medium text-primary mt-1">
-																	Fantasy: {player.fantasyScore.toFixed(1)}
-																</div>
-															</div>
-														</div>
-
-														<div className="flex items-center justify-between">
-															<span className="font-bold text-primary text-lg">
-																${player.price.toLocaleString()}
-															</span>
-															<Button
-																variant={canAdd ? "default" : "secondary"}
-																size="sm"
-																onClick={() => addPlayer(player)}
-																disabled={!canAdd}
-																className={canAdd ? "bg-gradient-primary text-primary-foreground hover:shadow-glow hover:scale-105 transition-all duration-200" : ""}
-															>
-																{!hasSpace ? "Team Full" : !canAfford ? "Too Expensive" : "Add"}
-															</Button>
-														</div>
-													</div>
-												);
-											})}
-										</div>
 									)}
 								</CardContent>
 							</Card>
