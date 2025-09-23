@@ -5,21 +5,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { User } from "@supabase/supabase-js";
 
-// Mock player data for scoring calculation
-const mockPlayers = [
-  { id: 1, name: "jstn", team: "NRG", position: "Striker", price: 2500, score: 1245, goals: 89, assists: 67, saves: 23, goldenGoals: 12 },
-  { id: 2, name: "GarrettG", team: "NRG", position: "Support", price: 2200, score: 1156, goals: 45, assists: 89, saves: 56, goldenGoals: 8 },
-  { id: 3, name: "SquishyMuffinz", team: "NRG", position: "Defense", price: 2300, score: 1198, goals: 34, assists: 78, saves: 134, goldenGoals: 5 },
-  { id: 4, name: "Aztral", team: "BDS", position: "Striker", price: 2400, score: 1187, goals: 92, assists: 56, saves: 18, goldenGoals: 15 },
-  { id: 5, name: "Monkey M.", team: "BDS", position: "Support", price: 2100, score: 1098, goals: 38, assists: 95, saves: 67, goldenGoals: 7 },
-  { id: 6, name: "ExoTiiK", team: "BDS", position: "Defense", price: 2000, score: 1034, goals: 25, assists: 71, saves: 156, goldenGoals: 3 },
-  { id: 7, name: "Joyo", team: "G2", position: "Striker", price: 2300, score: 1167, goals: 78, assists: 62, saves: 31, goldenGoals: 11 },
-  { id: 8, name: "Chicago", team: "G2", position: "Support", price: 2000, score: 1087, goals: 42, assists: 84, saves: 49, goldenGoals: 6 },
-];
+interface PlayerStats {
+  goals: number;
+  assists: number;
+  saves: number;
+  score: number;
+  demos: number;
+  total: number;
+}
 
 interface LeaderboardTeam {
   team_name: string;
@@ -29,6 +27,7 @@ interface LeaderboardTeam {
   total_points: number;
   grade: string;
   owner_name: string;
+  event_id?: string;
 }
 
 interface TeamModalProps {
@@ -64,14 +63,14 @@ const TeamModal = ({ team, isOpen, onClose }: TeamModalProps) => {
                   <div className="text-xs text-muted-foreground">
                     ID: {player.id || 'N/A'}
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    G: {player.stats?.goals || 0} | A: {player.stats?.assists || 0} | S: {player.stats?.saves || 0} | Score: {player.stats?.score || 0}
-                  </div>
+                   <div className="text-xs text-muted-foreground mt-1">
+                     G: {(player.stats?.goals || 0).toFixed(1)} | A: {(player.stats?.assists || 0).toFixed(1)} | S: {(player.stats?.saves || 0).toFixed(1)} | D: {(player.stats?.demos || 0).toFixed(1)} | Sc: {(player.stats?.score || 0).toFixed(0)}
+                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="font-bold text-primary">${(player.price || 1200).toLocaleString()}</div>
-                  <div className="text-xs text-muted-foreground">{player.stats?.total || 0} pts</div>
-                </div>
+                 <div className="text-right">
+                   <div className="font-bold text-primary">${(player.price || 1200).toLocaleString()}</div>
+                   <div className="text-xs text-primary">Fantasy: {calculateFantasyScore(player.stats || {}).toFixed(1)}</div>
+                 </div>
               </div>
             );
           })}
@@ -86,12 +85,25 @@ const TeamModal = ({ team, isOpen, onClose }: TeamModalProps) => {
   );
 };
 
+// Calculate fantasy score: F = Goals x 0.95 + Assists x 0.75 + 0.48 x Saves + 17 x Demos + 0.7 x Score
+const calculateFantasyScore = (stats: Partial<PlayerStats>) => {
+  const goals = stats.goals || 0;
+  const assists = stats.assists || 0;
+  const saves = stats.saves || 0;
+  const demos = stats.demos || 0;
+  const score = stats.score || 0;
+  
+  return goals * 0.95 + assists * 0.75 + saves * 0.48 + demos * 17 + score * 0.7;
+};
+
 const Leaderboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [teams, setTeams] = useState<LeaderboardTeam[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<LeaderboardTeam | null>(null);
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
+  const [events, setEvents] = useState<any[]>([]);
+  const [currentEvent, setCurrentEvent] = useState<string>("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -117,13 +129,39 @@ const Leaderboard = () => {
   }, [navigate]);
 
   useEffect(() => {
-    if (user) {
+    loadEvents();
+  }, []);
+
+  useEffect(() => {
+    if (user && currentEvent) {
       loadGlobalLeague();
     }
-  }, [user]);
+  }, [user, currentEvent]);
+
+  const loadEvents = async () => {
+    try {
+      const response = await fetch(`https://tliuublslpgztrxqalcw.supabase.co/rest/v1/events?select=id,name,starts_at&order=created_at.desc`, {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsaXV1YmxzbHBnenRyeHFhbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NjM3MjQsImV4cCI6MjA2NzIzOTcyNH0.M_IGHoMd8o_2czXnBgOB49kZilnfpl7WgjU0IZp1CsE'
+        }
+      });
+      const events = await response.json();
+      setEvents(events || []);
+      
+      // Auto-select the first event if available
+      if (events && events.length > 0) {
+        setCurrentEvent(events[0].id);
+      }
+    } catch (error) {
+      console.error("Error loading events:", error);
+    }
+  };
 
   const loadGlobalLeague = async () => {
     try {
+      if (!currentEvent) return;
+
       // Get global league
       const { data: globalLeague, error: leagueError } = await supabase
         .from('leagues')
@@ -136,11 +174,12 @@ const Leaderboard = () => {
         return;
       }
 
-      // Get all teams in global league
+      // Get all teams in global league for the current event
       const { data: teamsData, error: teamsError } = await supabase
         .from('fantasy_teams')
-        .select('team_name, user_id, selected_players, total_cost')
-        .eq('league_id', globalLeague.id);
+        .select('team_name, user_id, selected_players, total_cost, event_id')
+        .eq('league_id', globalLeague.id)
+        .eq('event_id', currentEvent);
 
       if (teamsError) {
         console.error('Error loading teams:', teamsError);
@@ -163,18 +202,20 @@ const Leaderboard = () => {
         const processedTeams = teamsData
           .map(team => {
             const players = team.selected_players as any[];
-            const totalPoints = players.reduce((sum, player) => {
-              const mockPlayer = mockPlayers.find(p => p.id === player.id);
-              return sum + (mockPlayer?.score || 0);
+            
+            // Calculate total fantasy points using the new formula
+            const totalFantasyScore = players.reduce((sum, player) => {
+              const stats = player.stats || {};
+              return sum + calculateFantasyScore(stats);
             }, 0);
 
-            const avgScore = players.length > 0 ? totalPoints / players.length : 0;
+            const avgFantasyScore = players.length > 0 ? totalFantasyScore / players.length : 0;
             let grade = 'F';
-            if (avgScore >= 1200) grade = 'S';
-            else if (avgScore >= 1100) grade = 'A';
-            else if (avgScore >= 1000) grade = 'B';
-            else if (avgScore >= 900) grade = 'C';
-            else if (avgScore >= 800) grade = 'D';
+            if (avgFantasyScore >= 50) grade = 'S';
+            else if (avgFantasyScore >= 40) grade = 'A';
+            else if (avgFantasyScore >= 30) grade = 'B';
+            else if (avgFantasyScore >= 20) grade = 'C';
+            else if (avgFantasyScore >= 10) grade = 'D';
 
             // Find the owner's profile
             const profile = profilesData?.find(p => p.user_id === team.user_id);
@@ -184,9 +225,10 @@ const Leaderboard = () => {
               user_id: team.user_id,
               selected_players: players,
               total_cost: team.total_cost,
-              total_points: totalPoints,
+              total_points: Math.round(totalFantasyScore * 100) / 100, // Round to 2 decimal places
               grade,
-              owner_name: profile?.display_name || 'Unknown Player'
+              owner_name: profile?.display_name || 'Unknown Player',
+              event_id: team.event_id
             };
           })
           .sort((a, b) => b.total_points - a.total_points);
@@ -235,21 +277,48 @@ const Leaderboard = () => {
               Global Leaderboard
             </h1>
             <p className="text-muted-foreground" style={{ fontFamily: "var(--font-family)" }}>
-              View the top players and teams in Rocket League Fantasy
+              View the top fantasy teams ranked by fantasy points
             </p>
+          </div>
+
+          {/* Event Selection */}
+          <div className="mb-6">
+            <Card className="bg-gradient-card border-border shadow-card">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg text-foreground">Event Selection</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Select value={currentEvent} onValueChange={setCurrentEvent}>
+                  <SelectTrigger className="bg-input border-border">
+                    <SelectValue placeholder="Select an event to view leaderboard" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {events.map(event => (
+                      <SelectItem key={event.id} value={event.id}>
+                        {event.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
           </div>
 
           <Card className="bg-gradient-card border-border shadow-card animate-scale-in hover:shadow-glow transition-all duration-300">
             <CardHeader>
               <CardTitle className="text-foreground">Top Fantasy Teams</CardTitle>
               <CardDescription>
-                Teams are ranked by total points scored by selected players
+                Teams are ranked by total fantasy points using the formula: Goals×0.95 + Assists×0.75 + Saves×0.48 + Demos×17 + Score×0.7
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {teams.length === 0 ? (
+              {!currentEvent ? (
                 <div className="text-center py-8">
-                  <p className="text-muted-foreground">No teams found in the global league</p>
+                  <p className="text-muted-foreground">Please select an event to view the leaderboard</p>
+                </div>
+              ) : teams.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No teams found for this event in the global league</p>
                 </div>
               ) : (
                 <Table>
@@ -258,7 +327,7 @@ const Leaderboard = () => {
                       <TableHead className="w-12">#</TableHead>
                       <TableHead>Team Name</TableHead>
                       <TableHead>Owner</TableHead>
-                      <TableHead className="text-right">Points</TableHead>
+                      <TableHead className="text-right">Fantasy Points</TableHead>
                       <TableHead className="text-center">Grade</TableHead>
                       <TableHead className="text-right">Price</TableHead>
                     </TableRow>

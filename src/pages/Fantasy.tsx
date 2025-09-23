@@ -172,7 +172,19 @@ const Fantasy = () => {
 					players: data.selected_players, 
 					teamName: data.team_name 
 				});
-				setSelectedPlayers((data.selected_players as unknown) as PlayerWithStats[]);
+				// Ensure all players have complete stats structure with fallbacks
+				const playersWithStats = (data.selected_players as any[]).map(player => ({
+					...player,
+					stats: {
+						goals: player.stats?.goals || 0,
+						assists: player.stats?.assists || 0,
+						saves: player.stats?.saves || 0,
+						score: player.stats?.score || 0,
+						demos: player.stats?.demos || 0,
+						total: player.stats?.total || 0
+					}
+				}));
+				setSelectedPlayers(playersWithStats as PlayerWithStats[]);
 				setTeamName(data.team_name || 'My Team');
 			} else {
 				console.log('No team data found, resetting to defaults');
