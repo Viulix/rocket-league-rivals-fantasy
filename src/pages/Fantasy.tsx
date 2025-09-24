@@ -258,12 +258,68 @@ const Fantasy = () => {
 		}
 	};
 
+	// Rate-limited refresh from Ballchasing API
+	const refreshBallchasingData = async (eventId: string) => {
+		try {
+			// Check rate limiting (5 minutes = 300000ms)
+			const lastRefreshKey = `ballchasing_refresh_${eventId}`;
+			const lastRefresh = localStorage.getItem(lastRefreshKey);
+			const now = Date.now();
+			
+			if (lastRefresh && (now - parseInt(lastRefresh)) < 300000) {
+				console.log('Ballchasing refresh skipped - rate limited');
+				return;
+			}
+
+			// Get the event details to find the ballchasing group ID
+			const { data: event, error: eventError } = await supabase
+				.from('events')
+				.select('ballchasing_group_id, name, starts_at, ends_at')
+				.eq('id', eventId)
+				.single();
+
+			if (eventError || !event?.ballchasing_group_id) {
+				console.log('No ballchasing group ID found for event, skipping refresh');
+				return;
+			}
+
+			console.log('Refreshing Ballchasing data for event:', event.name);
+			
+			// Call the edge function to refresh data
+			const { data, error } = await supabase.functions.invoke('fetch-ballchasing-players', {
+				body: {
+					groupId: event.ballchasing_group_id,
+					eventName: event.name,
+					startsAt: event.starts_at,
+					endsAt: event.ends_at
+				}
+			});
+
+			if (error) {
+				console.error('Error refreshing Ballchasing data:', error);
+			} else {
+				console.log('Ballchasing data refreshed successfully:', data);
+				// Update rate limit
+				localStorage.setItem(lastRefreshKey, now.toString());
+				// Refresh player data to get the latest stats
+				await loadPlayersForEvent(eventId);
+			}
+		} catch (error) {
+			console.error('Error in refreshBallchasingData:', error);
+		}
+	};
+
 	const handleEventChange = async (eventId: string) => {
 		console.log('Event changed to:', eventId);
 		setCurrentEvent(eventId);
 		
 		if (eventId) {
+			// First refresh from Ballchasing API (with rate limiting)
+			await refreshBallchasingData(eventId);
+			
+			// Then load player data from database
 			await loadPlayersForEvent(eventId);
+			
 			// Load team for this specific event and league
 			if (user && currentLeague) {
 				console.log('Loading team for event change:', { userId: user.id, leagueId: currentLeague, eventId });
